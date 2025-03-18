@@ -23,6 +23,7 @@ class ESPTimeSeriesAPIManager {
     var atleastOnce = true
     
     let tsDataURL = Configuration.shared.awsConfiguration.baseURL + "/" + Constants.apiVersion + "/user/nodes/tsdata"
+    let simpleTSDataURL = Configuration.shared.awsConfiguration.baseURL + "/" + Constants.apiVersion + "/user/nodes/simple_tsdata"
     lazy var apiManager = ESPAPIManager()
     var dataSource: ESPTSDataList?
     
@@ -82,9 +83,56 @@ class ESPTimeSeriesAPIManager {
         }
     }
     
+    /// Method to fetch simple time series data using API.
+    ///
+    /// - Parameters:
+    ///   - nodeID: Node ID of device whose params data need to be fetched.
+    ///   - paramName: Name of device parameter.
+    ///   - dataType: Type of data (Integer & Float are currently supported.)
+    ///   - aggregate: Aggregate for a certain time duration like avgerage, minimum, maximum , etc.
+    ///   - timeInterval: Time interval aggregate like hour, day, week , etc.
+    ///   - startTime: Timestamp for start of duration.
+    ///   - endTime: Timestamp for end of duration.
+    ///   - weekStart: Day of week that will be considered as start of the week.
+    ///   - completionHandler: Callback method that is invoked in case request is succesfully processed or fails in between.
+    func fetchSimpleTSDataFor(nodeID: String, paramName: String, dataType:String? = nil, startTime: UInt? = nil, endTime: UInt? = nil, weekStart: String? = nil, completionHandler: @escaping (ESPTSData?, ESPNetworkError?) -> Void ) {
+        
+        var url = simpleTSDataURL + "?node_id=\(nodeID)&param_name=\(paramName)"
+        if let startTime = startTime {
+            url.append("&start_time=\(startTime)")
+        }
+        if let endTime = endTime {
+            url.append("&end_time=\(endTime)")
+        }
+        if let dataType = dataType {
+            switch dataType {
+            case "float","int":
+                url.append("&data_type=\(dataType)")
+            default:
+                completionHandler(nil,.serverError("Data type not supported."))
+                return
+            }
+        }
+        
+        let urlString = url.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)
+        
+        apiManager.genericAuthorizedDataRequest(url: urlString ?? url, parameter: nil, method: .get) { response, error in
+            guard let result = ESPTSData.decoder(data: response) else {
+                completionHandler(nil, error)
+                return
+            }
+            if let nextID = result.next_id {
+                self.fetchNextRecordSet(url: urlString ?? url, nodeID: nodeID, paramName: paramName, startID: nextID, tsData: result, completionHandler: completionHandler)
+            } else {
+                completionHandler(result, nil)
+            }
+        }
+    }
+    
     
     private func fetchNextRecordSet(url: String, nodeID: String, paramName: String, startID: String, tsData: ESPTSData, completionHandler: @escaping (ESPTSData?, ESPNetworkError?) -> Void) {
-        let urlString = url + "&start_id=\(startID)"
+        let encodedStartID = startID.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? startID
+        let urlString = url + "&start_id=\(encodedStartID)"
         apiManager.genericAuthorizedDataRequest(url: urlString, parameter: nil, method: .get) { response, error in
             guard let result = ESPTSData.decoder(data: response) else {
                 completionHandler(tsData, nil)

@@ -50,6 +50,9 @@ class GenericControlTableViewCell: UITableViewCell {
     var device: Device!
     var boolTypeValidValues: [String: Int] = ["true": 1, "false": 0, "yes": 1, "no": 0, "0": 0, "1": 1]
     var param: Param?
+    
+    //Time Series
+    var isSimpleTimeSeries: Bool?
 
     override func awakeFromNib() {
         super.awakeFromNib()

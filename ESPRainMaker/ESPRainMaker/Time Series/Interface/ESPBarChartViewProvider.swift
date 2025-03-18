@@ -78,12 +78,59 @@ struct ESPBarChartViewProvider {
             chartPointView.timeLabel.textColor = AppConstants.shared.getBGColor()
             chartPointView.timeLabel.text = ESPTimeStampInfo(timestamp: tappedGroupBar.tappedBar.model.constant.scalar).timeDescription(aggregate: tsArguments.aggregate, timeInterval: tsArguments.timeInterval)
             chartPointView.valueLabel.text = "\(tappedGroupBar.tappedBar.model.axisValue2.scalar.roundToDecimal(2))"
-            tappedBarView.superview?.bringSubviewToFront(tappedBarView)
-            currentDescriptionView = chartPointView
-            if tappedBarView.frame.minX + chartPointView.frame.width > UIScreen.main.bounds.width {
-                chartPointView.frame.origin.x = -(tappedBarView.frame.minX - chartPointView.frame.width)
+            
+            // Get the chart's superview (the view containing all chart layers)
+            if let chartSuperview = tappedBarView.superview?.superview {
+                // Convert the tapped bar's frame to the chart's superview coordinate space
+                let barFrameInSuperview = tappedBarView.convert(tappedBarView.bounds, to: chartSuperview)
+                
+                // Convert the chart's inner plotting frame to the superview's coordinate space
+                guard let barLayerSuperview = tappedBarView.superview else { return } // This is the layer containing the bar views
+                let innerFrameInSuperview = barLayerSuperview.convert(innerFrame, to: chartSuperview)
+                
+                // Get info view dimensions
+                var pointViewFrame = chartPointView.frame
+                let viewWidth = pointViewFrame.width
+                let viewHeight = pointViewFrame.height
+                
+                // Initial horizontal position: Center above/below the bar
+                pointViewFrame.origin.x = barFrameInSuperview.midX - (viewWidth / 2)
+                
+                // --- Define Bounds based on innerFrame ---
+                let padding: CGFloat = 8.0
+                let minX = innerFrameInSuperview.minX + padding
+                let maxX = innerFrameInSuperview.maxX - padding // Max X coordinate for the view's right edge
+                let minY = innerFrameInSuperview.minY + padding
+                let maxY = innerFrameInSuperview.maxY - padding // Max Y coordinate for the view's bottom edge
+                
+                // --- Clamp Horizontal Position ---
+                if pointViewFrame.origin.x < minX {
+                    pointViewFrame.origin.x = minX // Align left edge with padded boundary
+                } else if (pointViewFrame.origin.x + viewWidth) > maxX {
+                    pointViewFrame.origin.x = maxX - viewWidth // Align right edge with padded boundary
+                }
+                
+                // --- Determine Vertical Position ---
+                let yAbove = barFrameInSuperview.minY - viewHeight - padding
+                let yBelow = barFrameInSuperview.maxY + padding
+                
+                // Check if placing 'above' is fully valid (within minY and maxY bounds)
+                if yAbove >= minY && (yAbove + viewHeight) <= maxY {
+                    pointViewFrame.origin.y = yAbove
+                }
+                // Else, check if placing 'below' is fully valid (within minY and maxY bounds)
+                else if yBelow >= minY && (yBelow + viewHeight) <= maxY {
+                    pointViewFrame.origin.y = yBelow
+                }
+                // Fallback: Neither fits fully. Align with the top bound (minY).
+                else {
+                    pointViewFrame.origin.y = minY
+                }
+                
+                chartPointView.frame = pointViewFrame
+                chartSuperview.addSubview(chartPointView)
+                currentDescriptionView = chartPointView
             }
-            tappedBarView.addSubview(chartPointView)
         })
         
         // Remove point description on tap of chart view area.
