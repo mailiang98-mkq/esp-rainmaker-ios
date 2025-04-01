@@ -81,7 +81,7 @@ extension DeviceGroupCollectionViewCell: UICollectionViewDelegate {
                 if let matterNodeId = node.matter_node_id, let deviceId = matterNodeId.hexToDecimal {
                     if User.shared.isMatterNodeConnected(matterNodeId: matterNodeId) {
                         status = .local
-                    } else if node.isRainmaker, node.isConnected {
+                    } else if node.isRainmakerMatter, node.isConnected {
                         status = .remote
                     }
                     if status == .local {
@@ -163,7 +163,7 @@ extension DeviceGroupCollectionViewCell: UICollectionViewDataSource {
             if let id = node.node_id, let matterNodeId = node.matter_node_id, let deviceId = matterNodeId.hexToDecimal {
                 if User.shared.isMatterNodeConnected(matterNodeId: matterNodeId) {
                     status = .local
-                } else if node.isRainmaker, node.isConnected {
+                } else if node.isRainmakerMatter, node.isConnected {
                     status = .remote
                 } else {
                     if let controller = node.matterControllerNode, let controllerNodeId = controller.node_id {

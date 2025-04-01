@@ -61,7 +61,7 @@ extension DevicesViewController: DeviceGroupCollectionViewCellDelegate {
                 bindingEndpointClusterId = [key: value]
             }
         }
-        if let nodeId = node.nodeID, let rainmakerNode = User.shared.getNode(id: nodeId), !rainmakerNode.isRainmaker {
+        if let nodeId = node.nodeID, let rainmakerNode = User.shared.getNode(id: nodeId), !rainmakerNode.isRainmakerMatter {
             self.showMatterDeviceVCWithNode(node: node, group: group, bindingEndpointClusterId: bindingEndpointClusterId, indexPath: indexPath, switchIndex: switchIndex, nodeConnectionStatus: nodeConnectionStatus)
         } else {
             if let rNode = rNode, let matterNodeId = rNode.matter_node_id, User.shared.isMatterNodeConnected(matterNodeId: matterNodeId) {

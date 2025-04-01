@@ -167,7 +167,7 @@ class ESPMatterCommissioningVC: UIViewController {
                        message: ESPMatterConstants.operationFailedMsg,
                        buttonTitle: ESPMatterConstants.okTxt,
                        callback: {
-            self.goToHomeScreen()
+            self.goToHomeScreen(isRainmaker: false)
         })
     }
     
@@ -185,9 +185,9 @@ class ESPMatterCommissioningVC: UIViewController {
     }
     
     /// Go to Home screen
-    func goToHomeScreen() {
+    func goToHomeScreen(isRainmaker: Bool) {
         if let groupId = self.groupId, let matterNodeId = self.matterNodeId, let deviceId = matterNodeId.hexToDecimal {
-            if ESPMatterClusterUtil.shared.isRainmakerServerSupported(groupId: groupId, deviceId: deviceId).0 {
+            if ESPMatterClusterUtil.shared.isRainmakerServerSupported(groupId: groupId, deviceId: deviceId).0, isRainmaker {
                 DispatchQueue.main.async {
                     Utility.showLoader(message: "", view: self.view)
                 }
@@ -367,10 +367,10 @@ extension ESPMatterCommissioningVC: ESPMTRUIDelegate {
         }
     }
     
-    func reloadData(groupId: String? = nil, matterNodeId: String? = nil) {
+    func reloadData(groupId: String? = nil, matterNodeId: String? = nil, isRainmaker: Bool) {
         self.matterNodeId = matterNodeId
         if let groupId = groupId, let matterNodeId = matterNodeId, let deviceId = matterNodeId.hexToDecimal {
-            if ESPMatterClusterUtil.shared.isRainmakerControllerServerSupported(groupId: groupId, deviceId: deviceId).0 {
+            if ESPMatterClusterUtil.shared.isRainmakerControllerServerSupported(groupId: groupId, deviceId: deviceId).0, isRainmaker {
                 //Show login screen
                 self.alertUser(title: ESPMatterConstants.emptyString,
                                message: ESPMatterConstants.controllerNeedsAccessMsg,
@@ -385,7 +385,7 @@ extension ESPMatterCommissioningVC: ESPMTRUIDelegate {
                     var shouldUpdateDeviceList = false
                     var id: UInt64?
                     for node in  nodes {
-                        if let grpId = node.groupId, let matterNodeId = node.matter_node_id, let deviceId = matterNodeId.hexToDecimal, grpId == groupId, node.isRainmakerControllerSupported.0 {
+                        if let grpId = node.groupId, let matterNodeId = node.matter_node_id, let deviceId = matterNodeId.hexToDecimal, grpId == groupId, node.isRainmakerControllerSupported.0, node.isRainmakerMatter {
                             shouldUpdateDeviceList = true
                             id = deviceId
                             break
@@ -403,17 +403,17 @@ extension ESPMatterCommissioningVC: ESPMTRUIDelegate {
                         ESPMTRCommissioner.shared.updateDeviceListOnDevice(deviceId: id, endpoint: endpoint) { result in
                             DispatchQueue.main.async {
                                 Utility.hideLoader(view: self.view)
-                                self.goToHomeScreen()
+                                self.goToHomeScreen(isRainmaker: isRainmaker)
                             }
                         }
                     } else {
                         DispatchQueue.main.async {
-                            self.goToHomeScreen()
+                            self.goToHomeScreen(isRainmaker: isRainmaker)
                         }
                     }
                 } else {
                     DispatchQueue.main.async {
-                        self.goToHomeScreen()
+                        self.goToHomeScreen(isRainmaker: isRainmaker)
                     }
                 }
             }

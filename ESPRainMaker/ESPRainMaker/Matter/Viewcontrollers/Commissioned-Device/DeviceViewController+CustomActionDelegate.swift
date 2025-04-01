@@ -30,32 +30,41 @@ extension DeviceViewController: CustomActionDelegate {
     /// Launch controller
     func launchController() {
         if let groupId = self.group?.groupID, let node = self.rainmakerNode, let matterNodeId = node.matter_node_id, let deviceId = matterNodeId.hexToDecimal {
-            let clusterInfo = ESPMatterClusterUtil.shared.isRainmakerControllerServerSupported(groupId: groupId, deviceId: deviceId)
-            var endpoint: UInt16 = 0
-            if let point = clusterInfo.1, let id = UInt16(point) {
-                endpoint = id
-            }
-            DispatchQueue.main.async {
-                Utility.showLoader(message: "", view: self.view)
-            }
-            ESPMTRCommissioner.shared.readAttributeUserNOCInstalledOnDevice(deviceId: deviceId, endpoint: endpoint) { result in
-                if result {
-                    ESPMTRCommissioner.shared.updateDeviceListOnDevice(deviceId: deviceId, endpoint: endpoint) { result in
-                        DispatchQueue.main.async {
-                            Utility.hideLoader(view: self.view)
-                            if !result {
-                                self.alertUser(title: ESPMatterConstants.failureTxt,
-                                               message: ESPMatterConstants.operationFailedMsg,
-                                               buttonTitle: ESPMatterConstants.okTxt,
-                                               callback: {})
-                            }
-                        }
-                    }
-                    return
+            if node.isRainmakerMatter {
+                let clusterInfo = ESPMatterClusterUtil.shared.isRainmakerControllerServerSupported(groupId: groupId, deviceId: deviceId)
+                var endpoint: UInt16 = 0
+                if let point = clusterInfo.1, let id = UInt16(point) {
+                    endpoint = id
                 }
                 DispatchQueue.main.async {
-                    Utility.hideLoader(view: self.view)
-                    self.launchLoginScreen(groupId: groupId, matterNodeId: matterNodeId)
+                    Utility.showLoader(message: "", view: self.view)
+                }
+                ESPMTRCommissioner.shared.readAttributeUserNOCInstalledOnDevice(deviceId: deviceId, endpoint: endpoint) { result in
+                    if result {
+                        ESPMTRCommissioner.shared.updateDeviceListOnDevice(deviceId: deviceId, endpoint: endpoint) { result in
+                            DispatchQueue.main.async {
+                                Utility.hideLoader(view: self.view)
+                                if !result {
+                                    self.alertUser(title: ESPMatterConstants.failureTxt,
+                                                   message: ESPMatterConstants.operationFailedMsg,
+                                                   buttonTitle: ESPMatterConstants.okTxt,
+                                                   callback: {})
+                                }
+                            }
+                        }
+                        return
+                    }
+                    DispatchQueue.main.async {
+                        Utility.hideLoader(view: self.view)
+                        self.launchLoginScreen(groupId: groupId, matterNodeId: matterNodeId)
+                    }
+                }
+            } else {
+                DispatchQueue.main.async {
+                    self.alertUser(title: ESPMatterConstants.failureTxt,
+                                   message: ESPMatterConstants.rmControllerClusterNotSupportedMsg,
+                                   buttonTitle: ESPMatterConstants.okTxt,
+                                   callback: {})
                 }
             }
         }

@@ -28,7 +28,7 @@ protocol ESPConfirmNodeCommissioningLogic {
 
 protocol ESPConfirmNodeCommissioningPresentationLogic: AnyObject {
     func nodeCommissioningConfirmed(response: ESPConfirmNodeCommissioningResponse?, error: Error?)
-    func matterRainmakerCommissioningConfirmed(status: String?, token: String)
+    func matterRainmakerCommissioningConfirmed(status: String?, token: String, isRainmakerMatter: Bool?)
 }
 
 class ESPConfirmNodeCommissioningService: ESPConfirmNodeCommissioningLogic {
@@ -75,9 +75,10 @@ class ESPConfirmNodeCommissioningService: ESPConfirmNodeCommissioningLogic {
         let endpoint = ESPMatterAPIEndpoint.confirmMatterRainmakerCommissioning(url: url, groupId: groupId, requestId: requestId, challenge: challenge, rainmakerNodeId: rainmakerNodeId, token: token)
         self.apiWorker.callDataAPI(endPoint: endpoint) { data, error in
             if let data = data, let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any], let status = json[ESPMatterConstants.status] as? String, status.lowercased() == ESPMatterConstants.success {
-                self.presenter?.matterRainmakerCommissioningConfirmed(status: rainmakerNodeId, token: token)
+                let isRainmakerMatter: Bool = json[ESPMatterConstants.isRainmakerNode] as? Bool ?? false
+                self.presenter?.matterRainmakerCommissioningConfirmed(status: rainmakerNodeId, token: token, isRainmakerMatter: isRainmakerMatter)
             } else {
-                self.presenter?.matterRainmakerCommissioningConfirmed(status: nil, token: token)
+                self.presenter?.matterRainmakerCommissioningConfirmed(status: nil, token: token, isRainmakerMatter: nil)
             }
         }
     }

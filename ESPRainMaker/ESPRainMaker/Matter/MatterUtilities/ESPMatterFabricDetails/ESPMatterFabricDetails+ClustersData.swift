@@ -66,16 +66,6 @@ extension ESPMatterFabricDetails {
         ESPTokenWorker.shared.removeDeviceName(forGroupId: groupId, andDeviceId: deviceId)
     }
     
-    /// Set rainmaker type
-    /// - Parameters:
-    ///   - groupId: group id
-    ///   - deviceId: device id
-    ///   - val: val
-    func saveRainmakerType(groupId: String, deviceId: UInt64, val: String) {
-        let key = ESPMatterFabricKeys.shared.groupDeviceRainmakerTypeKey(groupId, deviceId)
-        UserDefaults.standard.set(val, forKey: key)
-    }
-    
     /// Get rainmaker type
     /// - Parameters:
     ///   - groupId: group id
@@ -84,19 +74,6 @@ extension ESPMatterFabricDetails {
     func isMatterType(groupId: String, deviceId: UInt64) -> Bool {
         let key = ESPMatterFabricKeys.shared.groupDeviceRainmakerTypeKey(groupId, deviceId)
         if let _ = UserDefaults.standard.value(forKey: key) as? String {
-            return true
-        }
-        return false
-    }
-    
-    /// Get rainmaker type
-    /// - Parameters:
-    ///   - groupId: group id
-    ///   - deviceId: device id
-    /// - Returns: val
-    func getRainmakerType(groupId: String, deviceId: UInt64) -> Bool {
-        let key = ESPMatterFabricKeys.shared.groupDeviceRainmakerTypeKey(groupId, deviceId)
-        if let val = UserDefaults.standard.value(forKey: key) as? String, val.lowercased() == ESPMatterConstants.trueFlag {
             return true
         }
         return false
@@ -401,11 +378,6 @@ extension ESPMatterFabricDetails {
             }
             if let attributesData = metadata[ESPMatterConstants.attributesData] as? [String: [UInt]] {
                 self.saveAttributesData(groupId: groupId, deviceId: deviceId, attributes: attributesData)
-            }
-            if let isRainmaker = metadata[ESPMatterConstants.isRainmaker] as? Bool, isRainmaker {
-                self.saveRainmakerType(groupId: groupId, deviceId: deviceId, val: ESPMatterConstants.trueFlag)
-            } else {
-                self.saveRainmakerType(groupId: groupId, deviceId: deviceId, val: ESPMatterConstants.falseFlag)
             }
             if let deviceName = metadata[ESPMatterConstants.deviceName] as? String {
                 self.saveDeviceName(groupId: groupId, matterNodeId: matterNodeId, deviceName: deviceName)

@@ -26,7 +26,7 @@ protocol ESPMTRUIDelegate: AnyObject {
     func hideToastMessage()
     func showLoaderInView(message: String)
     func hideLoaderFromView()
-    func reloadData(groupId: String?, matterNodeId: String?)
+    func reloadData(groupId: String?, matterNodeId: String?, isRainmaker: Bool)
     func showError(title: String, message: String, buttonTitle: String)
 }
 
