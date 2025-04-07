@@ -61,6 +61,9 @@ struct JSONParser {
             }
             if let metadata = node_details["metadata"] as? [String: Any] {
                 node.metadata = metadata
+                if let groupId = node.groupId, let matterNodeId = node.matter_node_id {
+                    ESPMatterFabricDetails.shared.saveMetadata(details: metadata, groupId: groupId, matterNodeId: matterNodeId)
+                }
             }
             if let config = node_details["config"] as? [String: Any] {
                 if let services = config[Constants.services] as? [[String: Any]] {

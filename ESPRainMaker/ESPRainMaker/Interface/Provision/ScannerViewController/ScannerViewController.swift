@@ -48,6 +48,7 @@ class ScannerViewController: UIViewController, AVCaptureMetadataOutputObjectsDel
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        self.locationManager.delegate = self
     }
 
     override func viewDidLayoutSubviews() {
@@ -500,6 +501,29 @@ extension ScannerViewController: ESPDeviceConnectionDelegate {
     
     func getProofOfPossesion(forDevice: ESPDevice, completionHandler: @escaping (String) -> Void) {
         completionHandler("")
+    }
+}
+
+extension ScannerViewController: CLLocationManagerDelegate {
+    
+    func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
+        switch status {
+        case .denied, .restricted:
+            DispatchQueue.main.async {
+                let alert = UIAlertController(title: "Location Services are disabled", message: "Please enable Location Services in your Settings", preferredStyle: .alert)
+                let okAction = UIAlertAction(title: "OK", style: .default) { _ in
+                    DispatchQueue.main.async {
+                        self.navigationController?.popToRootViewController(animated: true)
+                    }
+                }
+                alert.addAction(okAction)
+                self.present(alert, animated: true, completion: nil)
+            }
+        case .authorizedAlways, .authorizedWhenInUse:
+            break
+        default:
+            break
+        }
     }
 }
 

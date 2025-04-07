@@ -69,8 +69,8 @@ class ESPMTRCCTSliderTVC: UITableViewCell {
     var isRainmaker: Bool = true
     
     let titleText = "CCT"
-    let minLevel: Int = 2000
-    let maxLevel: Int = 6536
+    let minLevel: Int = 2700
+    let maxLevel: Int = 6500
     var currentLevel: Int = 0
     
     weak var paramChipDelegate: ParamCHIPDelegate?
@@ -136,7 +136,18 @@ class ESPMTRCCTSliderTVC: UITableViewCell {
         let textSize = thumbLabel.intrinsicContentSize
         let minWidth: CGFloat = 32
         let thumbWidth = max(textSize.width + padding, minWidth)
-        let thumbSize = CGSize(width: thumbWidth, height: textSize.height + padding)
+        
+        // Ensure circular shape when at minimum width
+        let thumbHeight: CGFloat
+        if thumbWidth == minWidth {
+            // At minimum width, make it circular
+            thumbHeight = minWidth
+        } else {
+            // Allow rectangular shape for longer text
+            thumbHeight = textSize.height + padding
+        }
+        
+        let thumbSize = CGSize(width: thumbWidth, height: thumbHeight)
         let thumbView = UIView(frame: CGRect(origin: .zero, size: thumbSize))
         thumbView.backgroundColor = backgroundColor
         thumbView.layer.cornerRadius = thumbSize.height / 2

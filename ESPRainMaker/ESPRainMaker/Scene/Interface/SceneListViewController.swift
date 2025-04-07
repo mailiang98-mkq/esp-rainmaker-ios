@@ -46,6 +46,12 @@ class SceneListViewController: UIViewController {
         navigationController?.navigationBar.isHidden = true
         editButton.setTitleColor(.white, for: .normal)
         
+        ESPSceneManager.shared.currentSceneKey = nil
+        // Force reload the available devices from the node list
+        if let nodeList = User.shared.associatedNodeList {
+            ESPSceneManager.shared.getAvailableDeviceWithSceneCapability(nodeList: nodeList)
+        }
+        
         //setup table view UI
         setupTable()
     }
@@ -56,9 +62,16 @@ class SceneListViewController: UIViewController {
     }
     
     override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
         tableView.isEditing = false
         editButton.setTitle("Edit", for: .normal)
         ESPSceneManager.shared.currentSceneKey = nil
+        
+        // Force reload the available devices from the node list
+        if let nodeList = User.shared.associatedNodeList {
+            ESPSceneManager.shared.getAvailableDeviceWithSceneCapability(nodeList: nodeList)
+        }
+        
         // Show UI based on scene list count
         if User.shared.updateDeviceList {
             User.shared.updateDeviceList = false
@@ -93,6 +106,10 @@ class SceneListViewController: UIViewController {
             } else {
                 User.shared.associatedNodeList = nodes
                 DispatchQueue.main.async {
+                    // Make sure to update available devices when nodes are refreshed
+                    if let nodeList = nodes {
+                        ESPSceneManager.shared.getAvailableDeviceWithSceneCapability(nodeList: nodeList)
+                    }
                     self.showScenesList()
                     self.refreshControl.endRefreshing()
                 }

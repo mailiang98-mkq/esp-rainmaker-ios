@@ -57,6 +57,7 @@ extension SelectDeviceActionCellDelegate {
                             let sliderCell = tableView.dequeueReusableCell(withIdentifier: "SliderTableViewCell", for: indexPath) as! SliderTableViewCell
                             object_setClass(sliderCell, ScheduleSliderTableViewCell.self)
                             let cell = sliderCell as! ScheduleSliderTableViewCell
+                            cell.setSliderThumbUI()
                             cell.cellType = serviceType
                             cell.hueSlider.isHidden = true
                             cell.slider.isHidden = false

@@ -273,13 +273,18 @@ extension DeviceViewController {
             cell.controlName.text = ESPMatterConstants.localTemperatureTxt
             if self.isDeviceOffline || self.showDefaultUI {
                 cell.setupOfflineLocalTemperatureUI()
+                cell.alpha = 0.5
             } else {
                 cell.setupLocalTemperatureUI()
+                cell.alpha = 1.0
             }
         } else if value == ESPMatterConstants.measuredTemperature {
             cell.controlName.text = ESPMatterConstants.localTemperatureTxt
             if self.isDeviceOffline || self.showDefaultUI {
                 cell.setupLocalTemperatureUI()
+                cell.alpha = 0.5
+            } else {
+                cell.alpha = 1.0
             }
         }
         self.setAutoresizingMask(cell)
@@ -313,6 +318,8 @@ extension DeviceViewController {
             cell.setupInitialCoolingSetpointValues2(isDeviceOffline: self.isDeviceOffline)
         }
         cell.isUserInteractionEnabled = !self.isDeviceOffline
+        cell.alpha = self.isDeviceOffline ? 0.5 : 1.0
+        cell.slider.alpha = self.isDeviceOffline ? 0.5 : 1.0
         return cell
     }
     
@@ -340,6 +347,8 @@ extension DeviceViewController {
                 cell.setupInitialCoolingSetpointValues(isDeviceOffline: self.isDeviceOffline)
             }
             cell.isUserInteractionEnabled = !self.isDeviceOffline
+            cell.alpha = self.isDeviceOffline ? 0.5 : 1.0
+            cell.slider.alpha = self.isDeviceOffline ? 0.5 : 1.0
             return cell
         }
         return nil
@@ -369,6 +378,8 @@ extension DeviceViewController {
                 cell.setupInitialHeatingSetpointValues(isDeviceOffline: self.isDeviceOffline)
             }
             cell.isUserInteractionEnabled = !self.isDeviceOffline
+            cell.alpha = self.isDeviceOffline ? 0.5 : 1.0
+            cell.slider.alpha = self.isDeviceOffline ? 0.5 : 1.0
             return cell
         }
         return nil
@@ -396,6 +407,8 @@ extension DeviceViewController {
         cell.setInitialControlSequenceOfOperation()
         cell.acParamDelegate = self
         cell.isUserInteractionEnabled = !self.isDeviceOffline
+        cell.alpha = self.isDeviceOffline ? 0.5 : 1.0
+        cell.dropDownButton.alpha = self.isDeviceOffline ? 0.5 : 1.0
         return cell
     }
     
@@ -429,6 +442,8 @@ extension DeviceViewController {
             }
         }
         cell.isUserInteractionEnabled = !self.isDeviceOffline
+        cell.alpha = self.isDeviceOffline ? 0.5 : 1.0
+        cell.dropDownButton.alpha = self.isDeviceOffline ? 0.5 : 1.0
         return cell
     }
     

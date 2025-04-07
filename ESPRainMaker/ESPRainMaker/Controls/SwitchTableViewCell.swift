@@ -38,6 +38,8 @@ class SwitchTableViewCell: UITableViewCell {
 
     override func awakeFromNib() {
         super.awakeFromNib()
+        // Set custom color for toggle switch to match app theme
+        toggleSwitch.onTintColor = UIColor(hexString: Constants.customColor)
     }
 
     // IB Actions

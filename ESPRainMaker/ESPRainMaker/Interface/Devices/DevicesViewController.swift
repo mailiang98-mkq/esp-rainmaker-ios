@@ -167,11 +167,30 @@ class DevicesViewController: UIViewController {
         if let nodeId = ESPMatterEcosystemInfo.shared.getControllerNotificationNodeId() {
             ESPMatterEcosystemInfo.shared.removeControllerNotificationNodeId()
             NetworkManager.shared.getNodeInfo(nodeId: nodeId) { node, _ in
-                if let node = node {
+                if let updatedNode = node {
+                    // Update the controller node in associatedNodeList
                     if let index = User.shared.associatedNodeList?.firstIndex(where: { $0.node_id == nodeId }) {
-                        User.shared.associatedNodeList![index] = node
+                        User.shared.associatedNodeList![index] = updatedNode
+                        
                         DispatchQueue.main.async {
+                            // Refresh UI to trigger Matter-only devices to re-read updated controller data
+                            // The controller data has already been saved by parseNodeArray -> saveMatterControllerData
+                            #if ESPRainMakerMatter
+                            if #available(iOS 16.4, *) {
+                                // Refresh visible Matter device cells to read updated controller data
+                                for cell in self.collectionView.visibleCells {
+                                    if let deviceCell = cell as? DeviceCollectionViewCell {
+                                        deviceCell.refreshFromControllerData()
+                                    }
+                                }
+                            }
+                            #endif
+                            
+                            // Reload collection view to update all devices
                             self.collectionView.reloadData()
+                            
+                            // Save updated node details to local storage
+                            ESPLocalStorageHandler().saveNodeDetails(nodes: User.shared.associatedNodeList)
                         }
                     }
                 }

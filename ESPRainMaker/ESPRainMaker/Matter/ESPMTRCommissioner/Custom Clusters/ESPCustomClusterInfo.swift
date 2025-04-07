@@ -409,3 +409,22 @@ enum generalcommissioning {
     static let clusterId: NSNumber = NSNumber(value: 48)
     static let clusterIdString = "48"
 }
+
+
+/*
+// MARK: Door Lock
+*/
+enum doorLock {
+    
+    static let clusterId: NSNumber = NSNumber(value: 257)
+    static let clusterIdString = "257"
+}
+ 
+/*
+ // MARK: Window Covering
+ */
+enum windowCovering {
+    
+    static let clusterId: NSNumber = NSNumber(value: 258)
+    static let clusterIdString = "258"
+}

@@ -140,7 +140,18 @@ class ESPMTRLevelSliderTVC: UITableViewCell {
         let textSize = thumbLabel.intrinsicContentSize
         let minWidth: CGFloat = 32
         let thumbWidth = max(textSize.width + padding, minWidth)
-        let thumbSize = CGSize(width: thumbWidth, height: textSize.height + padding)
+        
+        // Ensure circular shape when at minimum width
+        let thumbHeight: CGFloat
+        if thumbWidth == minWidth {
+            // At minimum width, make it circular
+            thumbHeight = minWidth
+        } else {
+            // Allow rectangular shape for longer text
+            thumbHeight = textSize.height + padding
+        }
+        
+        let thumbSize = CGSize(width: thumbWidth, height: thumbHeight)
         let thumbView = UIView(frame: CGRect(origin: .zero, size: thumbSize))
         thumbView.backgroundColor = backgroundColor
         thumbView.layer.cornerRadius = thumbSize.height / 2

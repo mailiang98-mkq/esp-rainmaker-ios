@@ -110,10 +110,15 @@ class JoinNetworkViewController: UIViewController {
             Utility.hideLoader(view: self.view)
             let successVC = self.storyboard?.instantiateViewController(withIdentifier: "successViewController") as! SuccessViewController
             successVC.passphrase = self.passphrase
-            successVC.ssid = self.ssidTextfield.text ?? ""
-            successVC.step1Failed = step1Failed
-            successVC.espDevice = self.device
-            self.navigationController?.pushViewController(successVC, animated: true)
+            if let ssid = self.ssidTextfield.text, ssid.replacingOccurrences(of: " ", with: "").count > 0 {
+                let cleanedSSID = ssid.replacingOccurrences(of: "’", with: "'")
+                successVC.ssid = cleanedSSID
+                successVC.step1Failed = step1Failed
+                successVC.espDevice = self.device
+                self.navigationController?.pushViewController(successVC, animated: true)
+                return
+            }
+            self.showErrorAlert(title: "Error", message: "Please enter a valid Wi-Fi SSID to proceed.", buttonTitle: "OK", callback: {})
         }
     }
 }

@@ -34,7 +34,13 @@ class ScheduleListViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-
+        
+        ESPScheduler.shared.currentScheduleKey = nil
+        // Ensure devices are loaded immediately
+        if ESPScheduler.shared.availableDevices.count == 0, let nodeList = User.shared.associatedNodeList {
+            ESPScheduler.shared.getAvailableDeviceWithScheduleCapability(nodeList: nodeList)
+        }
+        
         showScheduleList()
 
         navigationController?.navigationBar.isHidden = true
@@ -55,7 +61,13 @@ class ScheduleListViewController: UIViewController {
         tableView.isEditing = false
         editButton.setTitle("Edit", for: .normal)
         ESPScheduler.shared.currentScheduleKey = nil
-        // Show UI based on scheudle list count
+        
+        // Force reload the available devices from the node list
+        if let nodeList = User.shared.associatedNodeList {
+            ESPScheduler.shared.getAvailableDeviceWithScheduleCapability(nodeList: nodeList)
+        }
+        
+        // Show UI based on schedule list count
         if User.shared.updateDeviceList {
             User.shared.updateDeviceList = false
             Utility.showLoader(message: "", view: view)
@@ -114,6 +126,10 @@ class ScheduleListViewController: UIViewController {
             } else {
                 User.shared.associatedNodeList = nodes
                 DispatchQueue.main.async {
+                    // Make sure to update available devices when nodes are refreshed
+                    if let nodeList = nodes {
+                        ESPScheduler.shared.getAvailableDeviceWithScheduleCapability(nodeList: nodeList)
+                    }
                     self.showScheduleList()
                     self.refreshControl.endRefreshing()
                 }
@@ -125,7 +141,11 @@ class ScheduleListViewController: UIViewController {
 
     func showScheduleList() {
         getScheduleList()
-        if ESPScheduler.shared.availableDevices.count < 1 {
+        
+        // Check if any devices support scheduling, regardless of connectivity
+        let hasSchedulingDevices = User.shared.associatedNodeList?.contains { $0.isSchedulingSupported } ?? false
+        
+        if !hasSchedulingDevices {
             tableView.isHidden = true
             addButton.isHidden = true
             initialView.isHidden = false
@@ -175,7 +195,6 @@ class ScheduleListViewController: UIViewController {
         scheduleList[index] = scheduleKeys.joined(separator: ".")
         ESPScheduler.shared.schedules[scheduleList[index]] = schedule
     }
-
 }
 
 extension ScheduleListViewController: UITableViewDelegate {
