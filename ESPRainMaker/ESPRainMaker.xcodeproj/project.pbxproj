@@ -598,6 +598,7 @@
 		F1FFC90125D44CA400DD26C6 /* AddNodeGroupsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1FFC90025D44CA400DD26C6 /* AddNodeGroupsViewController.swift */; };
 		F1FFC90725D4872C00DD26C6 /* SelectNodeFooterCollectionReusableView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1FFC90625D4872B00DD26C6 /* SelectNodeFooterCollectionReusableView.swift */; };
 		F1FFC91125D4A04500DD26C6 /* EditNodeGroupViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1FFC91025D4A04500DD26C6 /* EditNodeGroupViewController.swift */; };
+		F81063A92DE5E075005BD8B6 /* ESPProvisionConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = F81063A82DE5E06B005BD8B6 /* ESPProvisionConstants.swift */; };
 		F84FD8822D78C6D300919407 /* ESPMTRCCTSliderTVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = F84FD8792D78C6D300919407 /* ESPMTRCCTSliderTVC.swift */; };
 		F84FD8832D78C6D300919407 /* ESPMTRLevelSliderTVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = F84FD87C2D78C6D300919407 /* ESPMTRLevelSliderTVC.swift */; };
 		F84FD8842D78C6D300919407 /* ESPMTRSaturationSliderTVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = F84FD87F2D78C6D300919407 /* ESPMTRSaturationSliderTVC.swift */; };
@@ -608,6 +609,7 @@
 		F84FD89A2D790B7D00919407 /* ESPMTROHSSliderTVC.xib in Resources */ = {isa = PBXBuildFile; fileRef = F84FD8962D790B7D00919407 /* ESPMTROHSSliderTVC.xib */; };
 		F84FD89F2D790B9C00919407 /* ESPMTROCSSliderTVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = F84FD89C2D790B9C00919407 /* ESPMTROCSSliderTVC.swift */; };
 		F84FD8A02D790B9C00919407 /* ESPMTROCSSliderTVC.xib in Resources */ = {isa = PBXBuildFile; fileRef = F84FD89D2D790B9C00919407 /* ESPMTROCSSliderTVC.xib */; };
+		F87C31E02DB8B0A400D0A107 /* esp_rmaker_chal_resp.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = F87C31DF2DB8B0A400D0A107 /* esp_rmaker_chal_resp.pb.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -1239,6 +1241,7 @@
 		F1FFC90025D44CA400DD26C6 /* AddNodeGroupsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddNodeGroupsViewController.swift; sourceTree = "<group>"; };
 		F1FFC90625D4872B00DD26C6 /* SelectNodeFooterCollectionReusableView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectNodeFooterCollectionReusableView.swift; sourceTree = "<group>"; };
 		F1FFC91025D4A04500DD26C6 /* EditNodeGroupViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditNodeGroupViewController.swift; sourceTree = "<group>"; };
+		F81063A82DE5E06B005BD8B6 /* ESPProvisionConstants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ESPProvisionConstants.swift; sourceTree = "<group>"; };
 		F84FD8792D78C6D300919407 /* ESPMTRCCTSliderTVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ESPMTRCCTSliderTVC.swift; sourceTree = "<group>"; };
 		F84FD87A2D78C6D300919407 /* ESPMTRCCTSliderTVC.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = ESPMTRCCTSliderTVC.xib; sourceTree = "<group>"; };
 		F84FD87C2D78C6D300919407 /* ESPMTRLevelSliderTVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ESPMTRLevelSliderTVC.swift; sourceTree = "<group>"; };
@@ -1249,6 +1252,7 @@
 		F84FD8962D790B7D00919407 /* ESPMTROHSSliderTVC.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = ESPMTROHSSliderTVC.xib; sourceTree = "<group>"; };
 		F84FD89C2D790B9C00919407 /* ESPMTROCSSliderTVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ESPMTROCSSliderTVC.swift; sourceTree = "<group>"; };
 		F84FD89D2D790B9C00919407 /* ESPMTROCSSliderTVC.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = ESPMTROCSSliderTVC.xib; sourceTree = "<group>"; };
+		F87C31DF2DB8B0A400D0A107 /* esp_rmaker_chal_resp.pb.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = esp_rmaker_chal_resp.pb.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -1999,6 +2003,7 @@
 		1431468F20E387C60017E119 /* proto */ = {
 			isa = PBXGroup;
 			children = (
+				F87C31DF2DB8B0A400D0A107 /* esp_rmaker_chal_resp.pb.swift */,
 				F1110430252D927F0030A1D3 /* constants.pb.swift */,
 				F111042C252D924F0030A1D3 /* esp_local_ctrl.pb.swift */,
 				F191CD482511235600BDCEF1 /* esp_rmaker_claim.pb.swift */,
@@ -2061,6 +2066,7 @@
 		F1072BBB256F9B2C00D7CE2C /* Provision */ = {
 			isa = PBXGroup;
 			children = (
+				F81063A82DE5E06B005BD8B6 /* ESPProvisionConstants.swift */,
 				0CAC43DB2C466B530047B1DB /* ESPScanConstants.swift */,
 				0C9850F02C2A91AD00D0E2B8 /* ScannerViewController */,
 				F191CD452511231C00BDCEF1 /* ClaimViewController.swift */,
@@ -3326,6 +3332,7 @@
 				F1390F2527D86C5D00F80DFB /* AutomationSelectDeviceVC.swift in Sources */,
 				F1B1011C269EC627004B5537 /* Double+DateTimeString.swift in Sources */,
 				F1AFB25A2721F98D00418969 /* UserAccountViewController.swift in Sources */,
+				F81063A92DE5E075005BD8B6 /* ESPProvisionConstants.swift in Sources */,
 				F1A866AB27EBCDD400A9858B /* AutomationActionSummaryView.swift in Sources */,
 				F1EAACAA23E2A74300E9A6A8 /* ColorPickerView.swift in Sources */,
 				0CD359472A2D25F30081017C /* ESPMTRCommissioner+GetClientDetails.swift in Sources */,
@@ -3414,6 +3421,7 @@
 				0C387F7E2A2F442A00C5EFA4 /* NotificationsViewController.swift in Sources */,
 				F1124F67268D0A0900FA0B9E /* ESPNodeSharingDeclinedEvent.swift in Sources */,
 				F195746625B69DDB005F6601 /* NodeDetailsHeaderView.swift in Sources */,
+				F87C31E02DB8B0A400D0A107 /* esp_rmaker_chal_resp.pb.swift in Sources */,
 				F1CC124A277F4B160007634C /* ESPChartSettings.swift in Sources */,
 				0CF6923C270A308B0098F515 /* ESPAlexaAPIService.swift in Sources */,
 				F1A057B62797B00600485C23 /* ESPTimeDurationSegment.swift in Sources */,

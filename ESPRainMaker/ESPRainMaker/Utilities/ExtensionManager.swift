@@ -760,6 +760,17 @@ extension ESPNoRefreshTokenLogic {
 
 extension NSDictionary {
     
+    /// Check device version info to find out if challenge response is supported
+    /// - Returns: is challenge response supported
+    func isChallengeResponseSupported() -> Bool {
+        if let rmakerInfo = self[ESPScanConstants.rmakerExtra] as? NSDictionary,
+           let rmakerCapabilities = rmakerInfo[ESPScanConstants.capabilities] as? [String],
+           rmakerCapabilities.contains(ESPScanConstants.challengeResponse) {
+            return true
+        }
+        return false
+    }
+    
     /// Check device version info to find ouf if assisted claiming is supported
     /// - Returns: is assisted claiming supported
     func isAssistedClaimingSupported() -> Bool {

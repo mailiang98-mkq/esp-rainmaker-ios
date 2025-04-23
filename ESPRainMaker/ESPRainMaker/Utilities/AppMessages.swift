@@ -22,6 +22,9 @@ class AppMessages {
     static let turnBLEOnMsg = "Please ensure that your bluetooth is powered on and restart the provisioning."
     static let upgradeOSVersionMsg = "You must upgrade to iOS 16.4 or above in order to avail this feature."
     static let upgradeOS15VersionMsg = "You must upgrade to iOS 15.0 or above in order to provision thread devices"
+    static let upgradeOS16VersionMsg = "You must upgrade to iOS 16.4 or above in order to use this feature."
     static let connectTBRMsg = "Please ensure the thread border router is powered and connected to home network."
     static let noThreadScanResult = "Device could not find any thread networks to join. Please ensure the thread border router is powered and connected to home network."
+    static let mappingVerificationFailedMsg = "Failed to verify mapping"
+    static let challengeFetchFailedMsg = "Failed to get challenge"
 }

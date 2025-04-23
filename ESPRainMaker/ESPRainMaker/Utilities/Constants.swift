@@ -54,6 +54,9 @@ struct Constants {
     static let failure = "failure"
     static let userID = "user_id"
     static let requestID = "request_id"
+    static let nodeID = "node_id"
+    static let challenge = "challenge"
+    static let challengeResponse = "challenge_response"
 
     static let usernameKey = "espusername"
     static let scanCharacteristic = "scan"
@@ -84,6 +87,8 @@ struct Constants {
     static let sharing = Configuration.shared.awsConfiguration.baseURL + "/" + Constants.apiVersion + "/user/nodes/sharing"
     static let pushNotification = Configuration.shared.awsConfiguration.baseURL + "/" + Constants.apiVersion + "/user/push_notification/mobile_platform_endpoint"
     static let deleteUserAccount = Configuration.shared.awsConfiguration.baseURL + "/" + Constants.apiVersion + "/user"
+    static let initiateMapping = Configuration.shared.awsConfiguration.baseURL + "/" + Constants.apiVersion + "/user/nodes/mapping/initiate"
+    static let verifyMapping = Configuration.shared.awsConfiguration.baseURL + "/" + Constants.apiVersion + "/user/nodes/mapping/verify"
 
     // UserDefault keys
     static let newDeviceAdded = Constants.bundleIdentifier + ".newDeviceAdded"

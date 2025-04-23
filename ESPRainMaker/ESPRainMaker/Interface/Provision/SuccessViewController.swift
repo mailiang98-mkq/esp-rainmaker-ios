@@ -58,18 +58,221 @@ class SuccessViewController: UIViewController {
     @IBOutlet var step5ErrorLabel: UILabel!
     @IBOutlet var finalStatusLabel: UILabel!
     @IBOutlet var okayButton: UIButton!
+    
+    @IBOutlet weak var step1Label: UILabel!
+    @IBOutlet weak var step2Label: UILabel!
+    @IBOutlet weak var step3Label: UILabel!
+    @IBOutlet weak var step4Label: UILabel!
+    @IBOutlet weak var step5Label: UILabel!
+    @IBOutlet weak var step5TopSpaceConstraint: NSLayoutConstraint!
 
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
-        if step1Failed {
-            if failureMessage.count > 0 {
-                step1FailedWithMessage(message: failureMessage)
-            } else {
-                step1FailedWithMessage(message: "Wrong pop entered!")
-            }
+        if let device = self.espDevice, let versionInfo = device.versionInfo, versionInfo.isChallengeResponseSupported() {
+            self.executeChallengeResponseWorkflow()
         } else {
-            startProvisioning()
+            if step1Failed {
+                if failureMessage.count > 0 {
+                    step1FailedWithMessage(message: failureMessage)
+                } else {
+                    step1FailedWithMessage(message: ESPProvisionConstants.wrongPOPEntered)
+                }
+            } else {
+                startProvisioning()
+            }
+        }
+    }
+    
+    // Execute Challenge Response Workflow:
+    private func executeChallengeResponseWorkflow() {
+        self.setupUIForChallengeResponse()
+        self.startStep1()
+        self.startChallengeResponseFlow { result, nodeId, errorDescription in
+            guard result, let nodeId = nodeId else {
+                if let errorDescription = errorDescription {
+                    self.step1FailedWithMessage(message: errorDescription)
+                }
+                return
+            }
+            self.startStep2()
+            self.provisionDevice(nodeId: nodeId) { provisionError in
+                guard let provisionError = provisionError else {
+                    User.shared.updateDeviceList = true
+                    self.startStep3()
+                    self.step5SetupNode(nodeID: nodeId)
+                    return
+                }
+                self.step2FailedWithMessage(error: provisionError)
+            }
+        }
+    }
+    
+    /// This method is used to setup the initial UI of the screen
+    /// Number of steps is different from normal provisioning
+    private func setupUIForChallengeResponse() {
+        self.step1Label.text = ESPProvisionConstants.confirmingNodeAssociation
+        self.step2Label.text = ESPProvisionConstants.confirmingWifiConnection
+        self.step5Label.text = ESPProvisionConstants.settingUpNode
+        
+        self.step3Image.isHidden = true
+        self.step3Indicator.isHidden = true
+        self.step3Label.isHidden = true
+        self.step3ErrorLabel.isHidden = true
+        
+        self.step4Image.isHidden = true
+        self.step4Indicator.isHidden = true
+        self.step4Label.isHidden = true
+        self.step4ErrorLabel.isHidden = true
+        
+        self.step5TopSpaceConstraint.constant-=104
+    }
+    
+    private func startStep1() {
+        DispatchQueue.main.async {
+            self.step1Image.isHidden = true
+            self.step1Indicator.isHidden = false
+            self.step1Indicator.startAnimating()
+        }
+    }
+    
+    private func startStep2() {
+        DispatchQueue.main.async {
+            self.step1Indicator.stopAnimating()
+            self.step1Image.image = UIImage(named: "checkbox_checked")
+            self.step1Image.isHidden = false
+            self.step2Image.isHidden = true
+            self.step2Indicator.isHidden = false
+            self.step2Indicator.startAnimating()
+        }
+    }
+    
+    private func startStep3() {
+        DispatchQueue.main.async {
+            self.step2Indicator.stopAnimating()
+            self.step2Image.image = UIImage(named: "checkbox_checked")
+            self.step2Image.isHidden = false
+        }
+    }
+    
+    private func provisionDevice(nodeId: String, completion: @escaping (ESPProvisionError?) -> Void) {
+        self.provision { status in
+            switch status {
+            case .success:
+                completion(nil)
+            case let .failure(error):
+                completion(error)
+                self.step2FailedWithMessage(error: error)
+            case .configApplied:
+                break
+            }
+        }
+    }
+    
+    private func startChallengeResponseFlow(completionHandler: @escaping (Bool, String?, String?) -> ()) {
+        User.shared.initiateMapping { [weak self] challenge, requestId, error in
+            guard let self = self else { return }
+            
+            if let error = error {
+                completionHandler(false, nil, error.localizedDescription)
+                return
+            }
+            
+            guard let challenge = challenge, let requestId = requestId else {
+                completionHandler(false, nil, ESPProvisionConstants.challengeFailed)
+                return
+            }
+            
+            // Create protobuf challenge request
+            var payload = RmakerMisc_RMakerMiscPayload()
+            payload.msg = .typeCmdChallengeResponse
+            payload.status = .success
+            
+            var cmdPayload = RmakerMisc_CmdCRPayload()
+            cmdPayload.payload = challenge.data(using: .utf8) ?? Data()
+            payload.payload = .cmdChallengeResponsePayload(cmdPayload)
+            
+            do {
+                // Serialize to bytes
+                let data = try payload.serializedData()
+                
+                // Send challenge to device
+                self.espDevice.sendData(path: ESPScanConstants.challengeResponse, data: data) { [weak self] response, error in
+                    guard let self = self else { return }
+                    
+                    if let error = error {
+                        Utility.hideLoader(view: self.view)
+                        completionHandler(false, nil, error.localizedDescription)
+                        return
+                    }
+                    
+                    guard let response = response else {
+                        Utility.hideLoader(view: self.view)
+                        completionHandler(false, nil, ESPProvisionConstants.noResponseFromDevice)
+                        return
+                    }
+                    
+                    // Parse protobuf response
+                    do {
+                        let challengeResponse = try RmakerMisc_RMakerMiscPayload(serializedData: response)
+                        
+                        // Check response status
+                        if challengeResponse.status != .success {
+                            completionHandler(false, nil, "\(ESPProvisionConstants.deviceReturnsErrorStatus): \(challengeResponse.status)")
+                            return
+                        }
+                        
+                        // Extract response payload
+                        guard case let .respChallengeResponsePayload(respPayload) = challengeResponse.payload else {
+                            Utility.hideLoader(view: self.view)
+                            completionHandler(false, nil, ESPProvisionConstants.invalidResponseFormat)
+                            return
+                        }
+                        
+                        // Convert payload to hex string with validation
+                        let bytes = [UInt8](respPayload.payload)
+                        if bytes.count != 256 {
+                            completionHandler(false, nil, "Invalid challenge response length: \(bytes.count), expected: 256")
+                            return
+                        }
+                        
+                        // Convert bytes to hex string
+                        var hexString = ""
+                        for byte in bytes {
+                            // Use String(format: "%02x") to ensure exactly 2 hex chars per byte
+                            // Use byte & 0xFF to handle signed bytes correctly
+                            hexString += String(format: "%02x", byte & 0xFF)
+                        }
+                        
+                        // Validate hex string length (256 bytes * 2 = 512 chars)
+                        if hexString.count != 512 {
+                            completionHandler(false, nil, "Invalid hex string length: \(hexString.count), expected: 512")
+                            return
+                        }
+                        
+                        // Call verify mapping API
+                        User.shared.verifyUserNodeMapping(requestId: requestId, nodeId: respPayload.nodeID, challengeResponse: hexString) { [weak self] success, error in
+                            guard let self = self else { return }
+                            
+                            if let error = error {
+                                completionHandler(false, nil, error.localizedDescription)
+                                return
+                            }
+                            
+                            if success {
+                                // Only after successful challenge response, proceed to provisioning
+                                completionHandler(true, respPayload.nodeID, nil)
+                            } else {
+                                completionHandler(false, nil, ESPProvisionConstants.challengeResponseVerificationFailed)
+                            }
+                        }
+                    } catch {
+                        completionHandler(false, nil, ESPProvisionConstants.deviceResponseParsingFailed)
+                    }
+                }
+            } catch {
+                completionHandler(false, nil, ESPProvisionConstants.challengeRequestCreationFailed)
+            }
         }
     }
 

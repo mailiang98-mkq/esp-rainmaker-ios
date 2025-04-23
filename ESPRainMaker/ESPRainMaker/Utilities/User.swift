@@ -231,6 +231,94 @@ class User {
             self.tbrConnectionManager.delegate = nil
         }
     }
+    
+    /// Method to initiate mapping with challenge response
+    ///
+    /// - Parameters:
+    ///   - completion: Callback invoked after api response is received with challenge, requestId and error
+    func initiateMapping(completion: @escaping (String?, String?, Error?) -> Void) {
+        let sessionWorker = ESPExtendUserSessionWorker()
+        sessionWorker.checkUserSession { accessToken, error in
+            if let token = accessToken {
+                let headers = [Constants.contentType: Constants.applicationJSON,
+                             Constants.authorization: token]
+                
+                NetworkManager.shared.apiManager.session.request(Constants.initiateMapping,
+                                                   method: .post,
+                                                   headers: HTTPHeaders(headers))
+                    .responseData { response in
+                        switch response.result {
+                        case .success(let data):
+                            let decoder = JSONDecoder()
+                            if let json = try? decoder.decode([String: String].self, from: data),
+                               let challenge = json[Constants.challenge],
+                               let requestId = json[Constants.requestID] {
+                                completion(challenge, requestId, nil)
+                            } else {
+                                completion(nil, nil, NSError(domain: "ESP", code: 1, userInfo: [NSLocalizedDescriptionKey: AppMessages.challengeFetchFailedMsg]))
+                            }
+                        case .failure(let error):
+                            completion(nil, nil, error)
+                        }
+                    }
+            } else {
+                completion(nil, nil, error)
+            }
+        }
+    }
+    
+    /// Method to verify user node mapping with challenge response
+    ///
+    /// - Parameters:
+    ///   - requestId: Request ID received from initiate mapping
+    ///   - nodeId: Node ID of the device
+    ///   - challengeResponse: Challenge response from the device
+    ///   - completion: Callback invoked after api response is received with success status and error
+    func verifyUserNodeMapping(requestId: String, nodeId: String, challengeResponse: String, completion: @escaping (Bool, Error?) -> Void) {
+        let sessionWorker = ESPExtendUserSessionWorker()
+        sessionWorker.checkUserSession { accessToken, error in
+            if let token = accessToken {
+                let headers = [Constants.contentType: Constants.applicationJSON,
+                             Constants.authorization: token]
+                
+                // Create request body
+                let parameters: [String: String] = [
+                    Constants.requestID: requestId,
+                    Constants.nodeID: nodeId,
+                    Constants.challengeResponse: challengeResponse
+                ]
+                
+                NetworkManager.shared.apiManager.session.request(Constants.verifyMapping,
+                                                   method: .post,
+                                                   parameters: parameters,
+                                                   encoding: JSONEncoding.default,
+                                                   headers: HTTPHeaders(headers))
+                    .responseData { response in
+                        
+                        switch response.result {
+                        case .success(let data):
+                            let decoder = JSONDecoder()
+                            if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+                                if let status = json[Constants.statusKey] as? String,
+                                   status.lowercased() == Constants.successKey {
+                                    completion(true, nil)
+                                } else {
+                                    var errorDescription = AppMessages.mappingVerificationFailedMsg
+                                    if let description = json[Constants.descriptionKey] as? String {
+                                        errorDescription = description
+                                    }
+                                    completion(false, NSError(domain: "ESP", code: 1, userInfo: [NSLocalizedDescriptionKey: errorDescription]))
+                                }
+                            }
+                        case .failure(let error):
+                            completion(false, error)
+                        }
+                    }
+            } else {
+                completion(false, error)
+            }
+        }
+    }
 }
 
 extension User: ESPLocalControlDelegate {

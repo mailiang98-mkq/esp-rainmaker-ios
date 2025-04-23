@@ -20,6 +20,9 @@ import Foundation
 
 class ESPScanConstants {
     
+    static let rmakerExtra = "rmaker_extra"
+    static let challengeResponse = "ch_resp"
+    
     static let capabilities = "cap"
     static let rmaker = "rmaker"
     static let prov = "prov"
