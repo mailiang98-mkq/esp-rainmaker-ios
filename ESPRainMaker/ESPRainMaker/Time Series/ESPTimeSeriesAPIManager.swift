@@ -22,10 +22,25 @@ class ESPTimeSeriesAPIManager {
     
     var atleastOnce = true
     
-    let tsDataURL = Configuration.shared.awsConfiguration.baseURL + "/" + Constants.apiVersion + "/user/nodes/tsdata"
-    let simpleTSDataURL = Configuration.shared.awsConfiguration.baseURL + "/" + Constants.apiVersion + "/user/nodes/simple_tsdata"
+    // Convert to computed properties for dynamic URL resolution
+    var tsDataURL: String { Configuration.shared.awsConfiguration.baseURL + "/" + Constants.apiVersion + "/user/nodes/tsdata" }
+    var simpleTSDataURL: String { Configuration.shared.awsConfiguration.baseURL + "/" + Constants.apiVersion + "/user/nodes/simple_tsdata" }
     lazy var apiManager = ESPAPIManager()
     var dataSource: ESPTSDataList?
+    
+    init() {
+        // Listen for configuration updates and reinitialize API manager
+        NotificationCenter.default.addObserver(self, selector: #selector(configurationUpdated), name: NSNotification.Name(Constants.configurationUpdateNotification), object: nil)
+    }
+    
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
+    
+    @objc private func configurationUpdated() {
+        // Reinitialize the API manager to pick up new server trust configuration
+        apiManager = ESPAPIManager()
+    }
     
     /// Method to fetch time series data using API.
     ///

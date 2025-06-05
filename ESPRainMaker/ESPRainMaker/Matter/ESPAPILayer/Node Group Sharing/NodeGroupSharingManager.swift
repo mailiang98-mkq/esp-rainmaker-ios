@@ -22,13 +22,27 @@ import Foundation
 class NodeGroupSharingManager {
     
     static let shared = NodeGroupSharingManager()
-    private let apiManager = ESPAPIManager()
-    private let nodeSharing = Configuration.shared.awsConfiguration.baseURL + "/" + Constants.apiVersion + "/user/nodes/sharing"
-    private let nodeSharingRequests = Configuration.shared.awsConfiguration.baseURL + "/" + Constants.apiVersion + "/user/nodes/sharing/requests"
-    private let nodeGroupSharing = Configuration.shared.awsConfiguration.baseURL + "/" + Constants.apiVersion + "/user/node_group/sharing"
-    private let nodeGroupSharingRequests = Configuration.shared.awsConfiguration.baseURL + "/" + Constants.apiVersion + "/user/node_group/sharing/requests"
+    private var apiManager = ESPAPIManager()
     
-    private init() {}
+    // Convert to computed properties for dynamic URL resolution
+    private var nodeSharing: String { Configuration.shared.awsConfiguration.baseURL + "/" + Constants.apiVersion + "/user/nodes/sharing" }
+    private var nodeSharingRequests: String { Configuration.shared.awsConfiguration.baseURL + "/" + Constants.apiVersion + "/user/nodes/sharing/requests" }
+    private var nodeGroupSharing: String { Configuration.shared.awsConfiguration.baseURL + "/" + Constants.apiVersion + "/user/node_group/sharing" }
+    private var nodeGroupSharingRequests: String { Configuration.shared.awsConfiguration.baseURL + "/" + Constants.apiVersion + "/user/node_group/sharing/requests" }
+    
+    private init() {
+        // Listen for configuration updates and reinitialize API manager
+        NotificationCenter.default.addObserver(self, selector: #selector(configurationUpdated), name: NSNotification.Name(Constants.configurationUpdateNotification), object: nil)
+    }
+    
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
+    
+    @objc private func configurationUpdated() {
+        // Reinitialize the API manager to pick up new server trust configuration
+        apiManager = ESPAPIManager()
+    }
     
     /// Get node group sharing
     /// - Parameters:

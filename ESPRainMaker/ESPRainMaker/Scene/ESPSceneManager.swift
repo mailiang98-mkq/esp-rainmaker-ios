@@ -26,7 +26,21 @@ class ESPSceneManager: CommonDeviceServicesProtocol {
     var availableDevices: [String: Device] = [:]
     var currentScene: ESPScene!
     var currentSceneKey: String!
-    let apiManager = ESPAPIManager()
+    var apiManager = ESPAPIManager()
+    
+    private init() {
+        // Listen for configuration updates and reinitialize API manager
+        NotificationCenter.default.addObserver(self, selector: #selector(configurationUpdated), name: NSNotification.Name(Constants.configurationUpdateNotification), object: nil)
+    }
+    
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
+    
+    @objc private func configurationUpdated() {
+        // Reinitialize the API manager to pick up new server trust configuration
+        apiManager = ESPAPIManager()
+    }
     
     // MARK: Utility methods
     

@@ -24,7 +24,9 @@ class ESPNodeMetadataService {
     static let shared = ESPNodeMetadataService()
     let extendSessionWorker = ESPExtendUserSessionWorker()
     let apiWorker = ESPAPIWorker()
-    static let nodeMetadataURL = Configuration.shared.awsConfiguration.baseURL + "/" + Constants.apiVersion + "/user/nodes"
+    
+    // Convert to computed property for dynamic URL resolution
+    static var nodeMetadataURL: String { Configuration.shared.awsConfiguration.baseURL + "/" + Constants.apiVersion + "/user/nodes" }
     static let metadataKey = "metadata"
     static let isThreadKey = "is_thread_device"
     static let statusKey = "status"

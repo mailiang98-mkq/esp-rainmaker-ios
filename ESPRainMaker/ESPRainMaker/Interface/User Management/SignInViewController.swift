@@ -300,6 +300,8 @@ class SignInViewController: UIViewController, ESPNoRefreshTokenLogic, UITextView
         UserDefaults.standard.removeObject(forKey: Constants.overriddenBaseURLKey)
         Configuration.shared.awsConfiguration.resetBaseURLFromConfig()
         self.resetParamURL()
+        // Notify all components that the configuration has changed
+        NotificationCenter.default.post(name: NSNotification.Name(Constants.configurationUpdateNotification), object: nil)
     }
         
     func resetParamURL() {
@@ -312,6 +314,8 @@ class SignInViewController: UIViewController, ESPNoRefreshTokenLogic, UITextView
                                     redirectURL: Configuration.shared.awsConfiguration.redirectURL,
                                     appClientID: Configuration.shared.awsConfiguration.appClientId,
                                     userPool: Configuration.shared.appConfiguration.userPool)
+        // Notify all components that the configuration has changed
+        NotificationCenter.default.post(name: NSNotification.Name(Constants.configurationUpdateNotification), object: nil)
     }
     
     func configureBrandLogo() {

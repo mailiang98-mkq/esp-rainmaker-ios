@@ -30,6 +30,17 @@ class ESPMatterNodeDetailsService {
         index = 0
         self.groups = groups
         self.service = ESPGetNodeGroupsService(presenter: self)
+        // Listen for configuration updates to recreate service with updated URLs
+        NotificationCenter.default.addObserver(self, selector: #selector(configurationUpdated), name: NSNotification.Name(Constants.configurationUpdateNotification), object: nil)
+    }
+    
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
+    
+    @objc private func configurationUpdated() {
+        // Recreate the service to pick up new URL configuration
+        self.service = ESPGetNodeGroupsService(presenter: self)
     }
     
     func getNodeDetails(completion: @escaping () -> Void) {

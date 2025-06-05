@@ -21,15 +21,30 @@ import Foundation
 
 // Class to manage group related methods
 class NodeGroupManager {
-    private let apiManager = ESPAPIManager()
-    private let nodeGroupURL = Configuration.shared.awsConfiguration.baseURL + "/" + Constants.apiVersion + "/user/node_group"
+    private var apiManager = ESPAPIManager()
+    
+    // Convert to computed property for dynamic URL resolution  
+    private var nodeGroupURL: String { Configuration.shared.awsConfiguration.baseURL + "/" + Constants.apiVersion + "/user/node_group" }
 
     var nodeGroups: [NodeGroup] = []
+    var primaryGroup: NodeGroup?
     static let shared = NodeGroupManager()
     var listUpdated = false
     let fabricDetails = ESPMatterFabricDetails.shared
 
-    private init() {}
+    private init() {
+        // Listen for configuration updates and reinitialize API manager
+        NotificationCenter.default.addObserver(self, selector: #selector(configurationUpdated), name: NSNotification.Name(Constants.configurationUpdateNotification), object: nil)
+    }
+    
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
+    
+    @objc private func configurationUpdated() {
+        // Reinitialize the API manager to pick up new server trust configuration
+        apiManager = ESPAPIManager()
+    }
     
     /// Get node group for group id
     /// - Parameter id: group id

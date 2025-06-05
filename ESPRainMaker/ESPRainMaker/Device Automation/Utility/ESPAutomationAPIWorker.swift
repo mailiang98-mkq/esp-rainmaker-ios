@@ -24,6 +24,21 @@ class ESPAutomationAPIWorker {
     var session: Session!
     
     init() {
+        setupSession()
+        // Listen for configuration updates and reinitialize session
+        NotificationCenter.default.addObserver(self, selector: #selector(configurationUpdated), name: NSNotification.Name(Constants.configurationUpdateNotification), object: nil)
+    }
+    
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
+    
+    @objc private func configurationUpdated() {
+        // Reinitialize the session to pick up new server trust configuration
+        setupSession()
+    }
+    
+    private func setupSession() {
         if let fileName = ESPServerTrustParams.shared.fileName {
             let certificate = ESPAutomationAPIWorker.certificate(filename: fileName)
             let serverTrustEvaluators = ESPServerTrustEvaluatorsWorker.shared.getEvaluators(

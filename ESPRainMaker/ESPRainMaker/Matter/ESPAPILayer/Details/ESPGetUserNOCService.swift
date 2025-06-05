@@ -30,6 +30,16 @@ class ESPGetUserNOCService {
     init(groups: [NodeGroup]) {
         index = 0
         self.groups = groups
+        // Listen for configuration updates
+        NotificationCenter.default.addObserver(self, selector: #selector(configurationUpdated), name: NSNotification.Name(Constants.configurationUpdateNotification), object: nil)
+    }
+    
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
+    
+    @objc private func configurationUpdated() {
+        // No specific action needed here since URL construction is already dynamic
     }
     
     func issueUserNOC(completion: @escaping () -> Void) {
