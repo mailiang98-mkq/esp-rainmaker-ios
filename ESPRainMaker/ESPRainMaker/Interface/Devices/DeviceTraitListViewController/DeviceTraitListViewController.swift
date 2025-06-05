@@ -130,10 +130,20 @@ class DeviceTraitListViewController: UIViewController {
                 }
             }
         }
-        if let node = device.node, let service = node.getService(forServiceType: Constants.threadBRService), let params = service.params {
-            for param in params {
-                if let type = param.type, (type == Constants.threadPendingDataset || type == Constants.threadActiveDataset) {
-                    dataSource.append(param)
+        if let node = device.node {
+            if let service = node.getService(forServiceType: Constants.threadBRService), let params = service.params {
+                for param in params {
+                    if let type = param.type, [Constants.threadPendingDataset,
+                                               Constants.threadActiveDataset].contains(type) {
+                        dataSource.append(param)
+                    }
+                }
+            }
+            if let service = node.getService(forServiceType: Constants.matterControllerServiceType), let params = service.params {
+                for param in params {
+                    if let type = param.type, type == ClientOnlyControllerConstants.paramMatterCtlCmd {
+                        dataSource.append(param)
+                    }
                 }
             }
         }
@@ -436,7 +446,21 @@ class DeviceTraitListViewController: UIViewController {
     }
 
     func getTableViewCellBasedOn(dynamicAttribute: Param, indexPath: IndexPath) -> UITableViewCell {
-        if dynamicAttribute.type == Constants.threadPendingDataset || dynamicAttribute.type == Constants.threadActiveDataset {
+        if dynamicAttribute.type == ClientOnlyControllerConstants.paramMatterCtlCmd {
+            if let cell = tableView.dequeueReusableCell(withIdentifier: CustomActionCell.reuseIdentifier) as? CustomActionCell {
+                cell.delegate = self
+                cell.topSpaceConstraint.constant = 0
+                cell.bottomSpaceConstraint.constant = 0
+                cell.setupWorkflow(workflow: .launchController)
+                self.setAutoresizingMask(cell)
+                if dynamicAttribute.properties?.contains("write") ?? false, let node = device.node, node.isConnected || node.localNetwork {
+                    cell.setLaunchButtonConnectedStatus(isDeviceOffline: false)
+                } else {
+                    cell.setLaunchButtonConnectedStatus(isDeviceOffline: true)
+                }
+                return cell
+            }
+        } else if dynamicAttribute.type == Constants.threadPendingDataset || dynamicAttribute.type == Constants.threadActiveDataset {
             if let cell = tableView.dequeueReusableCell(withIdentifier: CustomActionCell.reuseIdentifier) as? CustomActionCell {
                 cell.delegate = self
                 cell.topSpaceConstraint.constant = 0

@@ -65,6 +65,8 @@ class SuccessViewController: UIViewController {
     @IBOutlet weak var step4Label: UILabel!
     @IBOutlet weak var step5Label: UILabel!
     @IBOutlet weak var step5TopSpaceConstraint: NSLayoutConstraint!
+    
+    var finalNode: Node?
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -408,6 +410,10 @@ class SuccessViewController: UIViewController {
             DispatchQueue.main.async {
                 self.nodeDetailsFetched = true
                 if let newNode = node {
+                    
+                    // Always store the node, regardless of client-only controller support
+                    self.finalNode = newNode
+                    
                     for service in newNode.services ?? [] {
                         if service.type?.lowercased() == Constants.timezoneServiceName {
                             if let param = service.params?.first(where: { $0.type?.lowercased() == Constants.timezoneServiceParam }) {
@@ -416,10 +422,10 @@ class SuccessViewController: UIViewController {
                                     DeviceControlHelper.shared.updateParam(nodeID: nodeID, parameter: [service.name ?? "Time": [param.name ?? "": TimeZone.current.identifier]], delegate: nil)
                                 }
                             }
+                            self.check5thStepStatus()
                         }
                     }
                 }
-                self.check5thStepStatus()
             }
         }
     }
@@ -448,6 +454,11 @@ class SuccessViewController: UIViewController {
                 self.step5Indicator.isHidden = true
                 self.step5Indicator.stopAnimating()
                 self.provisionFinsihedWithStatus(message: "Device Added Successfully!!")
+                
+                //Client-Only-Controller - Only call for devices that support this flow
+                if let finalNode = self.finalNode, finalNode.isClientOnlyControllerFlowSupported {
+                    self.handleClientOnlyControllerFlow()
+                }
             }
         }
     }
@@ -561,5 +572,101 @@ class SuccessViewController: UIViewController {
         destinationVC.checkDeviceAssociation = true
         navigationController?.navigationBar.isHidden = false
         navigationController?.popToRootViewController(animated: true)
+    }
+}
+
+// MARK: Controller service utility methods
+extension SuccessViewController {
+    
+    /// Handle workflow for client only controller device type
+    private func handleClientOnlyControllerFlow() {
+        if let finalNode = self.finalNode, finalNode.isClientOnlyControllerFlowSupported {
+            NodeGroupManager.shared.getNodeGroups { nodeGroups, _ in
+                if let nodeGroups = nodeGroups, nodeGroups.count > 0 {
+                    self.showGroupSelectionScreen()
+                } else {
+                    self.showErrorAlert(title: "Warning", message: "You don't have a single group created. Please create a group so that this controller device can be associated to it.", buttonTitle: "OK") {}
+                }
+            }
+        }
+    }
+    
+    /// Show Rainmaker Login Screen
+    func showRainmakerLoginScreen(groupId: String) {
+        let storyboard = UIStoryboard(name: "Login", bundle: nil)
+        if let nav = storyboard.instantiateViewController(withIdentifier: "signInController") as? UINavigationController {
+            if let signInVC = nav.viewControllers.first as? SignInViewController, let tab = self.tabBarController {
+                signInVC.setClientOnlyControllerFlow(isRainmakerControllerFlow: true,
+                                                     isClientOnlyControllerFlow: true,
+                                                     groupId: groupId)
+                signInVC.clientOnlyControllerDelegate = self
+                self.navigationController?.pushViewController(signInVC, animated: true)
+            }
+        }
+    }
+    
+    func showGroupSelectionScreen() {
+        #if ESPRainMakerMatter
+        let storyBrd = UIStoryboard(name: ESPMatterConstants.matterStoryboardId, bundle: nil)
+        let fabricSelectionVC = storyBrd.instantiateViewController(withIdentifier: ESPFabricSelectionVC.storyboardId) as! ESPFabricSelectionVC
+        fabricSelectionVC.isClientOnlyContoller = true
+        fabricSelectionVC.clientOnlyControllerDelegate = self
+        self.navigationController?.setNavigationBarHidden(true, animated: false)
+        self.navigationController?.pushViewController(fabricSelectionVC, animated: true)
+        #endif
+    }
+}
+
+#if ESPRainMakerMatter
+extension SuccessViewController: ClientOnlyControllerGroupSelectionDelegate {
+    
+    func groupSelected(groupId: String) {
+        DispatchQueue.main.async {
+            self.navigationController?.popViewController(animated: true)
+            if groupId.count > 0 {
+                self.showRainmakerLoginScreen(groupId: groupId)
+            }
+        }
+    }
+}
+#endif
+
+extension SuccessViewController: ClientOnlyControllerCredentialsDelegate {
+    
+    func loginCompleted(cloudResponse: ESPSessionResponse, groupId: String?) {
+        DispatchQueue.main.async {
+            self.navigationController?.popViewController(animated: true)
+        }
+        
+        let baseURL = Configuration.shared.awsConfiguration.baseURL
+        let refreshToken = cloudResponse.refreshToken ?? ""
+        
+        if refreshToken.count > 0,
+            let finalNode = self.finalNode,
+            let serviceName = finalNode.getServiceName(forServiceType: Constants.matterControllerServiceType),
+            let nodeId = finalNode.node_id,
+            let grpIdParamName = finalNode.clientOnlyControllerGroupParam?.name,
+            let baseURLParamName = finalNode.clientOnlyControllerBaseURLParam?.name,
+            let userTokenName = finalNode.clientOnlyControllerUserTokenParam?.name,
+            let groupId = groupId {
+            
+            let params: [String: Any] = [serviceName : [baseURLParamName: baseURL,
+                                            userTokenName: refreshToken,
+                                                          grpIdParamName: groupId] as Any]
+            DeviceControlHelper.shared.updateParam(nodeID: nodeId, parameter: params, delegate: self) { status in
+                if status == .success {
+                    //Client-Only-Controller
+                }
+            }
+        } else {
+            
+        }
+    }
+}
+
+extension SuccessViewController: ParamUpdateProtocol {
+    
+    func failureInUpdatingParam() {
+        
     }
 }

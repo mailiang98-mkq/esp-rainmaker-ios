@@ -19,7 +19,10 @@
 #if ESPRainMakerMatter
 import UIKit
 
-@available(iOS 16.4, *)
+protocol ClientOnlyControllerGroupSelectionDelegate: AnyObject {
+    func groupSelected(groupId: String)
+}
+
 class ESPFabricSelectionVC: UIViewController {
     
     // UI elements
@@ -37,11 +40,24 @@ class ESPFabricSelectionVC: UIViewController {
     var groupId: String?
     var onboardingPayload: String? = ""
     
+    var isClientOnlyContoller: Bool = false
+    weak var clientOnlyControllerDelegate: ClientOnlyControllerGroupSelectionDelegate?
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         self.setupNavigationBar()
         self.registerCells()
-        self.getNodeGroups()
+        if #available(iOS 16.4, *) {
+            self.getNodeGroups()
+        } else {
+            self.showErrorAlert(title: ESPMatterConstants.errorTxt,
+                                message: AppMessages.upgradeOS16VersionMsg,
+                                buttonTitle: ESPMatterConstants.okTxt) {
+                DispatchQueue.main.async {
+                    self.navigationController?.popViewController(animated: true)
+                }
+            }
+        }
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -71,7 +87,9 @@ class ESPFabricSelectionVC: UIViewController {
     /// Add group button pressed
     /// - Parameter sender: button pressed
     @IBAction func addGroupButtonPressed(_ sender: Any) {
-        self.addGroup()
+        if #available(iOS 16.4, *) {
+            self.addGroup()
+        }
     }
     
     /// Register cells
@@ -82,28 +100,15 @@ class ESPFabricSelectionVC: UIViewController {
         }
     }
     
-    /// Setup UI
-    func setupUI() {
-        DispatchQueue.main.async {
-            if let grps = self.nodeGroups, grps.count > 0 {
-                self.setNoGroupsUI(isHidden: true)
-                self.fabricTableView.reloadData()
-                if let _ = self.groupId {
-                    self.goToMatterCommissioning()
-                }
-            } else {
-                self.setNoGroupsUI(isHidden: false)
-            }
-        }
-    }
-    
     /// Setup no groups UI
     /// - Parameter isHidden: isHidden
     func setNoGroupsUI(isHidden: Bool) {
         self.addGroupButton.isHidden = isHidden
         self.noGroupIcon.isHidden = isHidden
         self.noGroupAddedLabel.isHidden = isHidden
-        self.addGroupNavbarButton?.isHidden = !isHidden
+        if #available(iOS 16.0, *) {
+            self.addGroupNavbarButton?.isHidden = !isHidden
+        }
         self.fabricTableView.isHidden = !isHidden
     }
 }
@@ -111,6 +116,18 @@ class ESPFabricSelectionVC: UIViewController {
 //MARK: Matter fabric updation
 @available(iOS 16.4, *)
 extension ESPFabricSelectionVC {
+    
+    /// Fabric selection completed
+    /// - Parameter grpId: group id
+    func fabricSelected(grpId: String) {
+        DispatchQueue.main.async {
+            if self.isClientOnlyContoller {
+                self.clientOnlyControllerDelegate?.groupSelected(groupId: grpId)
+            } else {
+                self.goToMatterCommissioning()
+            }
+        }
+    }
     
     /// Go to matter commissioning
     func goToMatterCommissioning() {
@@ -247,8 +264,8 @@ extension ESPFabricSelectionVC: ESPGetNodeGroupsPresentationLogic {
                 if let grps = self.nodeGroups, grps.count > 0 {
                     self.setNoGroupsUI(isHidden: true)
                     self.fabricTableView.reloadData()
-                    if let _ = self.groupId {
-                        self.goToMatterCommissioning()
+                    if let groupId = self.groupId {
+                        self.fabricSelected(grpId: groupId)
                     }
                 } else {
                     self.setNoGroupsUI(isHidden: false)
@@ -323,7 +340,6 @@ extension ESPFabricSelectionVC: ESPCreateMatterFabricPresentationLogic {
     }
 }
 
-@available(iOS 16.4, *)
 extension ESPFabricSelectionVC: UITableViewDelegate, UITableViewDataSource {
     
     func numberOfSections(in tableView: UITableView) -> Int {
@@ -364,12 +380,31 @@ extension ESPFabricSelectionVC: UITableViewDelegate, UITableViewDataSource {
             let nodeGroup = nodeGroups[indexPath.row]
             if let groupId = nodeGroup.group_id {
                 self.groupId = groupId
-                if let isMatter = nodeGroup.is_matter, isMatter {
-                    self.goToMatterCommissioning()
+                if let isMatter = nodeGroup.is_matter, isMatter, #available(iOS 16.4, *) {
+                    self.fabricSelected(grpId: groupId)
                 } else {
-                    self.updateNodeGroupToMatterFabric(groupId: groupId)
+                    if #available(iOS 16.4, *) {
+                        self.updateNodeGroupToMatterFabric(groupId: groupId)
+                    }
                 }
             }
+        }
+    }
+}
+
+extension ESPFabricSelectionVC {
+    
+    func getRainamakerOnlyNodeGroups() {
+        DispatchQueue.main.async {
+            Utility.showLoader(message: "", view: self.view)
+        }
+        if let grps = self.nodeGroups, grps.count > 0 {
+            DispatchQueue.main.async {
+                self.setNoGroupsUI(isHidden: true)
+                self.fabricTableView.reloadData()
+            }
+        } else {
+            self.setNoGroupsUI(isHidden: false)
         }
     }
 }
