@@ -412,7 +412,7 @@ class NodeDetailsViewController: UIViewController {
         // Add option for OTA update if supported
         if Configuration.shared.appConfiguration.supportOTAUpdate {
             var showFirmwareUpdateButton = false
-            if #available(iOS 16.4, *), let node = currentNode, node.isMatter, node.isRainmaker {
+            if #available(iOS 16.4, *), let node = currentNode, node.isMatter, node.isRainmakerMatter {
                 showFirmwareUpdateButton = true
             } else if let node = currentNode, !node.isMatter {
                 showFirmwareUpdateButton = true

@@ -81,7 +81,7 @@ extension ESPMatterCommissioningVC: RainmakerControllerFlowDelegate {
                         ESPMTRCommissioner.shared.updateDeviceListOnDevice(deviceId: deviceId, endpoint: endpoint) { isDeviceListUpdated in
                             DispatchQueue.main.async {
                                 if isDeviceListUpdated {
-                                    self.goToHomeScreen()
+                                    self.goToHomeScreen(isRainmaker: true)
                                 } else {
                                     self.hideLoaderAndAlertUser()
                                 }
@@ -132,28 +132,6 @@ extension ESPMatterCommissioningVC: RainmakerControllerFlowDelegate {
                     DispatchQueue.main.async {
                         self.hideLoaderAndAlertUser()
                     }
-                }
-            }
-        }
-    }
-    
-    /// Start controller update process
-    /// - Parameter deviceId: device id
-    func startControllerUpdate(deviceId: UInt64, endpoint: UInt16, matterNodeId: String, refreshToken: String) {
-        ESPMTRCommissioner.shared.resetRefreshTokenInDevice(deviceId: deviceId, endpoint: endpoint) { result in
-            if result {
-                self.appendRefreshToken(deviceId: deviceId, endpoint: endpoint, refreshToken: refreshToken) { result in
-                    if result {
-                        self.authorize(matterNodeId: matterNodeId, deviceId: deviceId, endpoint: endpoint, endpointURL: Configuration.shared.awsConfiguration.baseURL)
-                    } else {
-                        DispatchQueue.main.async {
-                            self.hideLoaderAndAlertUser()
-                        }
-                    }
-                }
-            } else {
-                DispatchQueue.main.async {
-                    self.hideLoaderAndAlertUser()
                 }
             }
         }

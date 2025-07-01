@@ -35,7 +35,7 @@ extension DeviceViewController {
             cell.delegate = self
             cell.rainmakerNode = self.rainmakerNode
             if let node = self.rainmakerNode {
-                if node.isRainmaker, let name = node.rainmakerDeviceName {
+                if node.isRainmakerMatter, let name = node.rainmakerDeviceName {
                     cell.deviceInfo = .deviceName
                     cell.deviceName.text = name
                 } else {
@@ -187,7 +187,12 @@ extension DeviceViewController {
             cell.delegate = self
             cell.setupWorkflow(workflow: .launchController)
             self.setAutoresizingMask(cell)
-            cell.setLaunchButtonConnectedStatus(isDeviceOffline: self.isDeviceOffline)
+            if let node = self.rainmakerNode, node.isMatterControllerDevice, !node.isRainmakerMatter {
+                cell.setLaunchButtonConnectedStatus(isDeviceOffline: true)
+                cell.setControllerUnauthorizedStatus()
+            } else {
+                cell.setLaunchButtonConnectedStatus(isDeviceOffline: self.isDeviceOffline)
+            }
             return cell
         }
         return nil

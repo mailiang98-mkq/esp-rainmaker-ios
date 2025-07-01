@@ -56,7 +56,9 @@ struct JSONParser {
                 }
             }
             #endif
-            
+            if let nodeType = node_details["node_type"] as? String {
+                node.node_type = nodeType
+            }
             if let metadata = node_details["metadata"] as? [String: Any] {
                 node.metadata = metadata
             }
@@ -210,7 +212,7 @@ struct JSONParser {
                             }
                         }
                         #if ESPRainMakerMatter
-                        if node.isMatter, node.isRainmaker {
+                        if node.isMatter, node.isRainmakerMatter {
                             newDevice.isMatter = true
                             let clients = node.bindingServers
                             if clients.count > 0 {
@@ -233,7 +235,7 @@ struct JSONParser {
                 node.devices = result.sorted { $0.name! < $1.name! }
             }
             #if ESPRainMakerMatter
-            if node.isMatter, !node.isRainmaker {
+            if node.isMatter, !node.isRainmakerMatter {
                 if node.bindingServers.count > 0 {
                     let clients = node.bindingServers
                     if clients.count > 0 {

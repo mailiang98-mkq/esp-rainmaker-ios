@@ -34,7 +34,6 @@ extension ESPMTRCommissioner {
                 self.readAttributeRainmakerNodeIdFromDevice(deviceId: deviceId, endpoint: point) { rainmakerNodeId in
                     self.rainmakerNodeId = rainmakerNodeId
                     if let rainmakerNodeId = rainmakerNodeId {
-                        self.fabricDetails.saveRainmakerType(groupId: groupId, deviceId: deviceId, val: ESPMatterConstants.trueFlag)
                         self.sendMatterNodeIdToDevice(deviceId: deviceId, endpoint: point, matterNodeId: matterNodeId) { result in
                             if result {
                                 self.readAttributeChallengeFromDevice(deviceId: deviceId, endpoint: point) { challenge in
@@ -102,7 +101,6 @@ extension ESPMTRCommissioner: ESPConfirmNodeCommissioningPresentationLogic {
         if let id = matterNodeId.hexToDecimal {
             self.fabricDetails.exportData(groupId: groupId, temporaryDeviceId: temporaryDeviceId, matterNodeId: matterNodeId)
             let isRainmakerFlag = isRainmaker ? ESPMatterConstants.trueFlag : ESPMatterConstants.falseFlag
-            self.fabricDetails.saveRainmakerType(groupId: groupId, deviceId: id, val: isRainmakerFlag)
             self.fabricDetails.saveDeviceName(groupId: groupId, matterNodeId: matterNodeId)
             DispatchQueue.main.async {
                 self.uidelegate?.showLoaderInView(message: ESPMatterConstants.fetchingEndpointsMsg)
@@ -110,7 +108,7 @@ extension ESPMTRCommissioner: ESPConfirmNodeCommissioningPresentationLogic {
             self.addDeviceDetailsCatId(writeCatIdOperate: true, groupId: groupId, deviceId: id) {
                 DispatchQueue.main.async {
                     self.uidelegate?.hideLoaderFromView()
-                    self.uidelegate?.reloadData(groupId: groupId, matterNodeId: matterNodeId)
+                    self.uidelegate?.reloadData(groupId: groupId, matterNodeId: matterNodeId, isRainmaker: isRainmaker)
                 }
             }
         }
@@ -118,13 +116,14 @@ extension ESPMTRCommissioner: ESPConfirmNodeCommissioningPresentationLogic {
     
     /// Matter+Rainmaker user node association confirmed
     /// - Parameter status: commissioning status
-    func matterRainmakerCommissioningConfirmed(status: String?, token: String) {
+    func matterRainmakerCommissioningConfirmed(status: String?, token: String, isRainmakerMatter: Bool?) {
         self.uidelegate?.hideLoaderFromView()
         let temporaryDeviceId = ESPMatterDeviceManager.shared.getCurrentDeviceId()
         if let _ = status {
             User.shared.updateDeviceList = true
             if let group = group, let grpId = group.groupID, let data = self.fabricDetails.getAddNodeToMatterFabricDetails(groupId: grpId, deviceId: temporaryDeviceId), let certs = data.certificates, certs.count > 0, let matterNodeId = certs[0].matterNodeId {
-                self.exportMatterNodeData(isRainmaker: true, groupId: grpId, matterNodeId: matterNodeId, temporaryDeviceId: temporaryDeviceId)
+                let isRainmaker = isRainmakerMatter ?? false
+                self.exportMatterNodeData(isRainmaker: isRainmaker, groupId: grpId, matterNodeId: matterNodeId, temporaryDeviceId: temporaryDeviceId)
             }
         } else {
             self.uidelegate?.showError(title: ESPMatterConstants.failureTxt, message: ESPMatterConstants.commissioningFailedMsg, buttonTitle: ESPMatterConstants.okTxt)

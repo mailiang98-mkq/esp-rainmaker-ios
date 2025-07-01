@@ -196,9 +196,16 @@ struct ESPMatterConstants {
     static let authorizationCode = "authorization_code"
     static let mutuallyExclusive = "mutually_exclusive"
     static let applicationURLEncoded = "application/x-www-form-urlencoded"
+    static let isRainmakerNode = "is_rainmaker_node"
     
     static let espressif = "Espressif"
     static let matterVendorId: UInt16 = 4891
+    
+    static let localMode = "Local"
+    static let remoteMode = "Remote"
+    static let offlineMode = "Offline"
+    static let controllerMode = "Controller"
+    static let unauthorizedMode = "Unauthorized"
     
     
     /// Messages
@@ -264,6 +271,8 @@ struct ESPMatterConstants {
     static let deviceNotReachableMsg: String = "Device not reachable! Please ensure that the device is powered on and connected to the same network."
     static let controllerNeedsAccessMsg: String = "Matter Controller needs access to your RainMaker account to fetch all nodes under the account. Proceed?"
     static let scanQRCodeMsg = "Since you are trying to commission a matter device, you will have to scan the QR code again using the scanner that will appear next."
+    static let rmClusterNotSupportedMsg = "Rainmaker cluster is not supported on this device."
+    static let rmControllerClusterNotSupportedMsg = "Rainmaker controller cluster is not supported for a pure matter device."
     
     /// Matter data keys
     static let groupIdKey = "group.com.espressif.rainmaker.softap"

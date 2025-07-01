@@ -126,14 +126,13 @@ extension Node {
     }
     
     /// Is rainmaker
-    var isRainmaker: Bool {
+    var isRainmakerMatter: Bool {
         if let node_type = node_type {
             if node_type.lowercased() == ESPMatterConstants.rainmakerMatter.lowercased() {
                 return true
+            } else if node_type.lowercased() == ESPMatterConstants.pureMatter.lowercased() {
+                return false
             }
-        }
-        if let metadata = matterMetadata, let val = metadata[ESPMatterConstants.isRainmaker] as? Bool {
-            return val
         }
         return false
     }
@@ -256,7 +255,7 @@ extension Node {
     }
     
     var rainmakerDeviceName: String? {
-        if self.isRainmaker, let devices = self.devices, devices.count > 0 {
+        if self.isRainmakerMatter, let devices = self.devices, devices.count > 0 {
             let device = devices[0]
             if let params = device.params {
                 for param in params {

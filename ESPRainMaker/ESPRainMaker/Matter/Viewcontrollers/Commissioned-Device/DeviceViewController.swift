@@ -29,6 +29,7 @@ class DeviceViewController: UIViewController {
     @IBOutlet weak var topBarTitle: BarTitle!
     @IBOutlet weak var infoButton: BarButton!
     @IBOutlet weak var offlineView: UIView!
+    @IBOutlet var connectionStatusLabel: UILabel!
     @IBOutlet weak var offlineViewHeight: NSLayoutConstraint!
     @IBOutlet weak var deviceTableView: UITableView!
     @IBOutlet weak var betaLabel: UILabel!
@@ -242,7 +243,7 @@ class DeviceViewController: UIViewController {
         self.cellInfo.removeAll()
         if let group = group, let groupId = group.groupID, let matterNodeId = matterNodeId, let deviceId = matterNodeId.hexToDecimal {
             self.cellInfo.append(ESPMatterConstants.matterDeviceName)
-            if let node = self.rainmakerNode, let _ = node.rainmakerDeviceName, node.isRainmaker {
+            if let node = self.rainmakerNode, let _ = node.rainmakerDeviceName, node.isRainmakerMatter {
                 //Setup UI for a rainmaker+matter node
                 self.addClusterUtilCells(groupId: groupId, deviceId: deviceId, forNode: node)
                 self.setupTableUI(showDefaultUI: false)
@@ -335,8 +336,18 @@ class DeviceViewController: UIViewController {
     /// Setup offline UI
     func setupOfflineUI() {
         DispatchQueue.main.async {
-            self.offlineView.isHidden = !self.isDeviceOffline
-            self.offlineViewHeight.constant = self.isDeviceOffline ? 17.0 : 0.0
+            self.offlineView.isHidden = false
+            self.offlineViewHeight.constant = 17.0
+            switch self.nodeConnectionStatus {
+            case .local:
+                self.connectionStatusLabel.text = ESPMatterConstants.localMode
+            case .remote:
+                self.connectionStatusLabel.text = ESPMatterConstants.remoteMode
+            case .offline:
+                self.connectionStatusLabel.text = ESPMatterConstants.offlineMode
+            case .controller:
+                self.connectionStatusLabel.text = ESPMatterConstants.controllerMode
+            }
         }
     }
 }

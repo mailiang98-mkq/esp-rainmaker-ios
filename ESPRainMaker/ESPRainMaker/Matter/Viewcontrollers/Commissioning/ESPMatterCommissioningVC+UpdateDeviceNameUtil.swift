@@ -32,7 +32,7 @@ extension ESPMatterCommissioningVC {
             if let nodes = nodes, nodes.count > 0 {
                 User.shared.associatedNodeList = nodes
                 for node in nodes {
-                    if let nodeId = node.node_id, node.isRainmaker, let deviceName = node.userDefinaedName, let groupId = self.groupId, let savedDeviceName = ESPMatterEcosystemInfo.shared.getDeviceName(), savedDeviceName == deviceName, let devices = node.devices, devices.count > 0 {
+                    if let nodeId = node.node_id, node.isRainmakerMatter, let deviceName = node.userDefinaedName, let groupId = self.groupId, let savedDeviceName = ESPMatterEcosystemInfo.shared.getDeviceName(), savedDeviceName == deviceName, let devices = node.devices, devices.count > 0 {
                         let device = devices[0]
                         for param in device.params ?? [] {
                             if let type = param.type, type == Constants.deviceNameParam, let properties = param.properties, properties.contains("write"), let name = device.name {

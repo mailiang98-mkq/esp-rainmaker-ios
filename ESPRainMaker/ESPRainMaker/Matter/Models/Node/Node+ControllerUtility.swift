@@ -76,7 +76,7 @@ extension Node {
     }
     
     /// Is device of type controller
-    var isControllerDevice: Bool {
+    var isMatterControllerDevice: Bool {
         if let nodeGroupId = self.groupId, let matterNodeId = self.matter_node_id, let nodeDeviceId = matterNodeId.hexToDecimal {
             return ESPMatterClusterUtil.shared.isRainmakerControllerServerSupported(groupId: nodeGroupId, deviceId: nodeDeviceId).0
         }
@@ -88,7 +88,7 @@ extension Node {
         if let matterNodeId = self.matter_node_id {
             if User.shared.isMatterNodeConnected(matterNodeId: matterNodeId) {
                 return .local
-            } else if self.isRainmaker, self.isConnected {
+            } else if self.isRainmakerMatter, self.isConnected {
                 return .remote
             }
         }
