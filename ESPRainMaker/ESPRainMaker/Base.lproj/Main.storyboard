@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="23094" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="S6F-ru-bO5">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="23504" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="S6F-ru-bO5">
     <device id="retina6_1" orientation="portrait" appearance="light"/>
     <dependencies>
         <deployment identifier="iOS"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="23084"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="23506"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
         <capability name="System colors in document resources" minToolsVersion="11.0"/>
         <capability name="collection view cell content view" minToolsVersion="11.0"/>
@@ -293,18 +293,24 @@
                         <outlet property="step1ErrorLabel" destination="fCj-RD-GMs" id="Gj8-9j-0kl"/>
                         <outlet property="step1Image" destination="lMB-Nt-hBX" id="9p9-hE-GKG"/>
                         <outlet property="step1Indicator" destination="EI1-NB-YbK" id="NQe-II-NyX"/>
+                        <outlet property="step1Label" destination="HVL-CL-p77" id="89m-pV-LMe"/>
                         <outlet property="step2ErrorLabel" destination="Qlp-cR-p6h" id="uHv-OG-F7i"/>
                         <outlet property="step2Image" destination="E4j-zh-PqL" id="Ynx-eN-EXA"/>
                         <outlet property="step2Indicator" destination="ael-bO-y7m" id="csz-1P-VF7"/>
+                        <outlet property="step2Label" destination="zYd-NF-c47" id="ZYf-CO-jQt"/>
                         <outlet property="step3ErrorLabel" destination="hSu-A8-v3O" id="Rg5-i9-kOh"/>
                         <outlet property="step3Image" destination="EBQ-TP-ed7" id="9kE-TX-AAe"/>
                         <outlet property="step3Indicator" destination="Dyt-XO-QVY" id="Rnf-GG-isk"/>
+                        <outlet property="step3Label" destination="PTw-LL-rYU" id="xvE-lN-7Cf"/>
                         <outlet property="step4ErrorLabel" destination="M1y-2P-lWd" id="De3-ak-NRh"/>
                         <outlet property="step4Image" destination="h1r-70-A72" id="hTf-30-JVW"/>
                         <outlet property="step4Indicator" destination="6Tb-MQ-W3n" id="Ufa-nf-1qT"/>
+                        <outlet property="step4Label" destination="XsR-rL-s0D" id="deN-8w-wNQ"/>
                         <outlet property="step5ErrorLabel" destination="2Cz-Pn-fIY" id="FcU-JN-FEY"/>
                         <outlet property="step5Image" destination="ri2-4E-4J7" id="Sij-5S-5XT"/>
                         <outlet property="step5Indicator" destination="nUY-tL-VrC" id="yVW-VR-SAP"/>
+                        <outlet property="step5Label" destination="itM-5Y-dWt" id="pdt-a8-Mnv"/>
+                        <outlet property="step5TopSpaceConstraint" destination="Z5h-jr-jsW" id="YyH-wu-JC4"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="55T-vs-eK8" userLabel="First Responder" sceneMemberID="firstResponder"/>
@@ -2837,7 +2843,7 @@ Unable to add device</string>
             <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
         </systemColor>
         <systemColor name="systemRedColor">
-            <color red="1" green="0.23137254900000001" blue="0.18823529410000001" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+            <color red="1" green="0.23137254901960785" blue="0.18823529411764706" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
         </systemColor>
     </resources>
 </document>

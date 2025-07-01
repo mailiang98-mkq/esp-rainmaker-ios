@@ -170,9 +170,14 @@ class ProvisionViewController: UIViewController {
     }
 
     private func provisionDevice(ssid _: String, passphrase: String) {
-        Utility.showLoader(message: "Sending association data", view: view)
         self.passphrase = passphrase
-        User.shared.associateNodeWithUser(device: device, delegate: self)
+        if let versionInfo = device.versionInfo, versionInfo.isChallengeResponseSupported() {
+            //Navigate to success view controller
+            self.showStatusScreen()
+        } else {
+            Utility.showLoader(message: "Sending association data", view: view)
+            User.shared.associateNodeWithUser(device: device, delegate: self)
+        }
     }
     
     @available(iOS 15.0, *)
