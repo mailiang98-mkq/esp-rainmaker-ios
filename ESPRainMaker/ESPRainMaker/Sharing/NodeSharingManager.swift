@@ -20,15 +20,29 @@ import Foundation
 
 // Class managing node sharing operations.
 class NodeSharingManager {
-    private let apiManager = ESPAPIManager()
-    private let nodeSharingURL = Configuration.shared.awsConfiguration.baseURL + "/" + Constants.apiVersion + "/user/nodes/sharing"
+    private var apiManager = ESPAPIManager()
+    
+    // Convert to computed property for dynamic URL resolution
+    private var nodeSharingURL: String { Configuration.shared.awsConfiguration.baseURL + "/" + Constants.apiVersion + "/user/nodes/sharing" }
 
     var sharingRequestsSent: [SharingRequest] = []
     var sharingRequestsReceived: [SharingRequest] = []
 
     static let shared = NodeSharingManager()
 
-    private init() {}
+    private init() {
+        // Listen for configuration updates and reinitialize API manager
+        NotificationCenter.default.addObserver(self, selector: #selector(configurationUpdated), name: NSNotification.Name(Constants.configurationUpdateNotification), object: nil)
+    }
+    
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
+    
+    @objc private func configurationUpdated() {
+        // Reinitialize the API manager to pick up new server trust configuration
+        apiManager = ESPAPIManager()
+    }
 
     /// Method to get sharing details of the logged in user.
     ///

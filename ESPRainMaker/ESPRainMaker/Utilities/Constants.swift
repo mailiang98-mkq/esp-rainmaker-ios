@@ -76,19 +76,22 @@ struct Constants {
     static let AWSCognitoUserPoolsSignInProviderKey = "UserPool"
     static let idProvider = "Github"
 
-    // AWS cognito APIs
-    static let addDevice = Configuration.shared.awsConfiguration.baseURL + "/" + Constants.apiVersion + "/user/nodes/mapping"
-    static let getUserId = Configuration.shared.awsConfiguration.baseURL + "/" + Constants.apiVersion + "/user"
-    static let getNodes = Configuration.shared.awsConfiguration.baseURL + "/" + Constants.apiVersion + "/user/nodes"
-    static let getNodeConfig = Configuration.shared.awsConfiguration.baseURL + "/" + Constants.apiVersion + "/user/nodes/config"
-    static let getNodeStatus = Configuration.shared.awsConfiguration.baseURL + "/" + Constants.apiVersion + "/user/nodes/status"
-    static let checkStatus = Configuration.shared.awsConfiguration.baseURL + "/" + Constants.apiVersion + "/user/nodes/mapping"
-    static let setParam = Configuration.shared.awsConfiguration.baseURL + "/" + Constants.apiVersion + "/user/nodes/params"
-    static let sharing = Configuration.shared.awsConfiguration.baseURL + "/" + Constants.apiVersion + "/user/nodes/sharing"
-    static let pushNotification = Configuration.shared.awsConfiguration.baseURL + "/" + Constants.apiVersion + "/user/push_notification/mobile_platform_endpoint"
-    static let deleteUserAccount = Configuration.shared.awsConfiguration.baseURL + "/" + Constants.apiVersion + "/user"
-    static let initiateMapping = Configuration.shared.awsConfiguration.baseURL + "/" + Constants.apiVersion + "/user/nodes/mapping/initiate"
-    static let verifyMapping = Configuration.shared.awsConfiguration.baseURL + "/" + Constants.apiVersion + "/user/nodes/mapping/verify"
+    // Configuration update notification
+    static let configurationUpdateNotification = "com.espressif.configurationUpdate"
+
+    // AWS cognito APIs - Convert from static to computed properties for dynamic URL resolution
+    static var addDevice: String { Configuration.shared.awsConfiguration.baseURL + "/" + Constants.apiVersion + "/user/nodes/mapping" }
+    static var getUserId: String { Configuration.shared.awsConfiguration.baseURL + "/" + Constants.apiVersion + "/user" }
+    static var getNodes: String { Configuration.shared.awsConfiguration.baseURL + "/" + Constants.apiVersion + "/user/nodes" }
+    static var getNodeConfig: String { Configuration.shared.awsConfiguration.baseURL + "/" + Constants.apiVersion + "/user/nodes/config" }
+    static var getNodeStatus: String { Configuration.shared.awsConfiguration.baseURL + "/" + Constants.apiVersion + "/user/nodes/status" }
+    static var checkStatus: String { Configuration.shared.awsConfiguration.baseURL + "/" + Constants.apiVersion + "/user/nodes/mapping" }
+    static var setParam: String { Configuration.shared.awsConfiguration.baseURL + "/" + Constants.apiVersion + "/user/nodes/params" }
+    static var sharing: String { Configuration.shared.awsConfiguration.baseURL + "/" + Constants.apiVersion + "/user/nodes/sharing" }
+    static var pushNotification: String { Configuration.shared.awsConfiguration.baseURL + "/" + Constants.apiVersion + "/user/push_notification/mobile_platform_endpoint" }
+    static var deleteUserAccount: String { Configuration.shared.awsConfiguration.baseURL + "/" + Constants.apiVersion + "/user" }
+    static var initiateMapping: String { Configuration.shared.awsConfiguration.baseURL + "/" + Constants.apiVersion + "/user/nodes/mapping/initiate" }
+    static var verifyMapping: String { Configuration.shared.awsConfiguration.baseURL + "/" + Constants.apiVersion + "/user/nodes/mapping/verify" }
 
     // UserDefault keys
     static let newDeviceAdded = Constants.bundleIdentifier + ".newDeviceAdded"
@@ -153,9 +156,9 @@ struct Constants {
     static let refreshDeviceList = "com.espressif.refreshDeviceList"
     static let controllerParamUpdate = "com.espressif.controllerParamUpdate"
 
-    // Claim APIs
-    static let claimInitPath = Configuration.shared.awsConfiguration.claimURL + "/claim/initiate"
-    static let claimVerifyPath = Configuration.shared.awsConfiguration.claimURL + "/claim/verify"
+    // Claim APIs - Convert to computed properties
+    static var claimInitPath: String { Configuration.shared.awsConfiguration.claimURL + "/claim/initiate" }
+    static var claimVerifyPath: String { Configuration.shared.awsConfiguration.claimURL + "/claim/verify" }
     static let boolTypeValidValues: [String: Bool] = ["true": true, "false": false, "yes": true, "no": false, "0": false, "1": true]
 
     // Node config constants

@@ -20,8 +20,8 @@ import Foundation
 
 class ESPAutomationConstants {
     
-    // Automation URLS
-    static let automationsURL = Configuration.shared.awsConfiguration.baseURL + "/" + Constants.apiVersion + "/user/node_automation"
+    // Automation URLS - Convert to computed property for dynamic URL resolution
+    static var automationsURL: String { Configuration.shared.awsConfiguration.baseURL + "/" + Constants.apiVersion + "/user/node_automation" }
     static let storyboardName = "DeviceAutomation"
     
     // Parsing keys

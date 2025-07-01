@@ -23,8 +23,10 @@ class ESPNodeGroupMetadataService {
     
     let apiWorker = ESPAPIWorker()
     let sessionWorker = ESPExtendUserSessionWorker()
-    let url = Configuration.shared.awsConfiguration.baseURL + "/" + Constants.apiVersion + "/user/nodes"
-    let groupURL = Configuration.shared.awsConfiguration.baseURL + "/" + Constants.apiVersion + "/user/node_group"
+    
+    // Convert to computed properties for dynamic URL resolution
+    var url: String { Configuration.shared.awsConfiguration.baseURL + "/" + Constants.apiVersion + "/user/nodes" }
+    var groupURL: String { Configuration.shared.awsConfiguration.baseURL + "/" + Constants.apiVersion + "/user/node_group" }
     var switchIndex: Int?
     let fabricDetails = ESPMatterFabricDetails.shared
     

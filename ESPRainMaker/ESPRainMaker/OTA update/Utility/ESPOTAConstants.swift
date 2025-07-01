@@ -19,8 +19,9 @@
 import Foundation
 
 struct ESPOTAConstants {
-    static let otaUpdateURL = Configuration.shared.awsConfiguration.baseURL + "/" + Constants.apiVersion + "/user/nodes/ota_update"
-    static let otaStatusURL = Configuration.shared.awsConfiguration.baseURL + "/" + Constants.apiVersion + "/user/nodes/ota_status"
+    // Convert to computed properties for dynamic URL resolution
+    static var otaUpdateURL: String { Configuration.shared.awsConfiguration.baseURL + "/" + Constants.apiVersion + "/user/nodes/ota_update" }
+    static var otaStatusURL: String { Configuration.shared.awsConfiguration.baseURL + "/" + Constants.apiVersion + "/user/nodes/ota_status" }
     
     // API keys
     static let nodeIDKey = "node_id"

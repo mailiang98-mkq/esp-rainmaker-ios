@@ -36,10 +36,10 @@ enum ESPMatterAPIEndpoint {
     case confirmNodeCommissioning(url: String, groupId: String, requestId: String, status: String, token: String)
     case confirmMatterRainmakerCommissioning(url: String, groupId: String, requestId: String, challenge: String, rainmakerNodeId: String, token: String)
     case deleteMatterFabric(url: String, groupId: String, token: String)
-    case removeNode(token: String, params: Parameters)
-    case removeNodeFromFabric(groupId: String, token: String, params: Parameters)
+    case removeNode(url: String, token: String, params: Parameters)
+    case removeNodeFromFabric(url: String, groupId: String, token: String, params: Parameters)
     
-    case updateNodeMetadata(nodeId: String, token: String, metadata: [String: Any?])
+    case updateNodeMetadata(url: String, nodeId: String, token: String, metadata: [String: Any?])
     
     // MARK: Returns URL string for the corresponding API endpoint
     var url: String {
@@ -72,13 +72,13 @@ enum ESPMatterAPIEndpoint {
         case .deleteMatterFabric(let url, let groupId, _):
             return url + "/user/node_group?group_id=\(groupId)"
             
-        case .removeNode(_, _):
-            return Constants.addDevice
-        case .removeNodeFromFabric(let groupId, _, _):
-            return Configuration.shared.awsConfiguration.baseURL + "/" + Constants.apiVersion + "/user/node_group?group_id=\(groupId)"
+        case .removeNode(let url, _, _):
+            return url
+        case .removeNodeFromFabric(let url, let groupId, _, _):
+            return "\(url)/user/node_group?group_id=\(groupId)"
             
-        case .updateNodeMetadata(let nodeId, _, _):
-            return Configuration.shared.awsConfiguration.baseURL + "/" + Constants.apiVersion + "/user/nodes?node_id=\(nodeId)"
+        case .updateNodeMetadata(let url, let nodeId, _, _):
+            return "\(url)/user/nodes?node_id=\(nodeId)"
         }
     }
     
@@ -94,11 +94,11 @@ enum ESPMatterAPIEndpoint {
             return [ESPMatterConstants.contentType: ESPMatterConstants.applicationJSON,
                     ESPMatterConstants.authorization: token]
             
-        case .removeNode(let token, _), .removeNodeFromFabric(_, let token, _):
+        case .removeNode(_, let token, _), .removeNodeFromFabric(_, _, let token, _):
             return [ESPMatterConstants.contentType: ESPMatterConstants.applicationJSON,
                     ESPMatterConstants.authorization: token]
             
-        case .updateNodeMetadata(_, let token, _):
+        case .updateNodeMetadata(_, _, let token, _):
             return [ESPMatterConstants.contentType: ESPMatterConstants.applicationJSON,
                     ESPMatterConstants.authorization: token]
         }
@@ -112,7 +112,7 @@ enum ESPMatterAPIEndpoint {
             return .get
         case .createMatterFabric(_,_,_,_,_,_,_):
             return .post
-        case .addNodeToMatterFabric(_,_,_,_,_,_), .confirmNodeCommissioning(_,_,_,_,_), .convertNodeGroupToMatterFabric(_,_,_), .issueUserNOC(_,_,_,_,_), .removeNodeFromFabric(_,_,_), .removeNode(_,_), .confirmMatterRainmakerCommissioning(_,_,_,_,_,_), .updateNodeMetadata(_,_,_):
+        case .addNodeToMatterFabric(_,_,_,_,_,_), .confirmNodeCommissioning(_,_,_,_,_), .convertNodeGroupToMatterFabric(_,_,_), .issueUserNOC(_,_,_,_,_), .removeNodeFromFabric(_,_,_,_), .removeNode(_,_,_), .confirmMatterRainmakerCommissioning(_,_,_,_,_,_), .updateNodeMetadata(_,_,_,_):
             return .put
         case .deleteMatterFabric(_,_,_):
             return .delete
@@ -157,9 +157,9 @@ enum ESPMatterAPIEndpoint {
                     ESPMatterConstants.challenge: challenge]
         case .getNodeGroups(_,_), .deleteMatterFabric(_, _, _), .getNodeGroupsMatterFabricDetails(_,_), .getNodeDetails(_,_,_):
             return nil
-        case .removeNode(_, let params), .removeNodeFromFabric(_,_, let params):
+        case .removeNode(_, _, let params), .removeNodeFromFabric(_, _, _, let params):
             return params
-        case .updateNodeMetadata(_, _, let metadata):
+        case .updateNodeMetadata(_, _, _, let metadata):
             return [ESPMatterConstants.metadata: [ESPMatterConstants.matter: metadata]]
         }
     }
@@ -190,13 +190,13 @@ enum ESPMatterAPIEndpoint {
             return "deleteMatterFabric"
         case .convertNodeGroupToMatterFabric(_,_,_):
             return "convertNodeGroupToMatterFabric"
-        case .removeNode(_,_):
+        case .removeNode(_,_,_):
             return "removeNode"
-        case .removeNodeFromFabric(_,_,_):
+        case .removeNodeFromFabric(_,_,_,_):
             return "removeNodeFromFabric"
         case .getNodeMetadata(_,_,_):
             return "getNodeMetadata"
-        case .updateNodeMetadata(_,_,_):
+        case .updateNodeMetadata(_,_,_,_):
             return "updateNodeMetadata"
         }
     }
