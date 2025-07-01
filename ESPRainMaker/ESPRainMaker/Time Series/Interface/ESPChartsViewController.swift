@@ -27,13 +27,17 @@ class ESPChartsViewController: UIViewController {
     let tsManager = ESPTimeSeriesAPIManager()
     var param: Param!
     var device: Device!
-    var espTSArguments = ESPTSArguments(aggregate: .raw, timeInterval: .hour)
+    var isSimpleTimeSeries: Bool = false
+    lazy var espTSArguments: ESPTSArguments = {
+        return ESPTSArguments(aggregate: .raw, timeInterval: .hour)
+    }()
     var chart: Chart?
     
     // IBOutlets
     @IBOutlet var durationSegmentControl: UISegmentedControl!
     @IBOutlet var aggregrateSegmentControl: UISegmentedControl!
     @IBOutlet var chartTypeSegmentControl: UISegmentedControl!
+    @IBOutlet weak var chartsViewHeightConstraint: NSLayoutConstraint!
     @IBOutlet var dateLabel: UILabel!
     @IBOutlet var titleLabel: UILabel!
     @IBOutlet var prevButton: UIButton!
@@ -41,7 +45,6 @@ class ESPChartsViewController: UIViewController {
     @IBOutlet weak var chartContainerView: UIView!
     @IBOutlet var noChartDataLabel: UILabel!
     @IBOutlet var scrollView: UIScrollView!
-    
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -143,7 +146,7 @@ class ESPChartsViewController: UIViewController {
         let espChartViewProvider = ESPChartViewProvider(tsArguments: espTSArguments, device: device, param: param, view: self.chartContainerView)
         let timeLabelGenerator = ESPTimeLabelGenerator(tsArgument: espTSArguments)
         dateLabel.text = timeLabelGenerator.getTimeLabel()
-        espChartViewProvider.getChartView(frame: chartContainerView.frame) { chart, chartPoints, error in
+        espChartViewProvider.getChartView(isSimpleTS: self.isSimpleTimeSeries, frame: chartContainerView.frame) { chart, chartPoints, error in
             DispatchQueue.main.async { [self] in
                 // Enable user interaction
                 self.scrollView.isUserInteractionEnabled = true
@@ -184,57 +187,73 @@ class ESPChartsViewController: UIViewController {
     private func configureSegements() {
         // Configure segments for time duration
         durationSegmentControl.removeAllSegments()
-        for (index, element) in ESPTimeDurationSegment.allCases.enumerated() {
-            durationSegmentControl.insertSegment(withTitle: element.rawValue, at: index, animated: false)
+        if isSimpleTimeSeries {
+            // Only show 1D, 7D, 4W for simple mode
+            let simpleDurations: [ESPTimeDurationSegment] = [.day, .week, .month]
+            for (index, element) in simpleDurations.enumerated() {
+                durationSegmentControl.insertSegment(withTitle: element.rawValue, at: index, animated: false)
+            }
+        } else {
+            // Show all durations for default mode
+            for (index, element) in ESPTimeDurationSegment.allCases.enumerated() {
+                durationSegmentControl.insertSegment(withTitle: element.rawValue, at: index, animated: false)
+            }
         }
         durationSegmentControl.selectedSegmentIndex = 0
         
         // Configure segments for data aggregate
-        aggregrateSegmentControl.removeAllSegments()
-        for (index, element) in ESPAggregate.allCases.enumerated() {
-            aggregrateSegmentControl.insertSegment(withTitle: element.rawValue, at: index, animated: false)
+        if !isSimpleTimeSeries {
+            // Only show aggregate control if not in simple mode
+            aggregrateSegmentControl.removeAllSegments()
+            for (index, element) in ESPAggregate.allCases.enumerated() {
+                aggregrateSegmentControl.insertSegment(withTitle: element.rawValue, at: index, animated: false)
+            }
+            aggregrateSegmentControl.selectedSegmentIndex = 0
+            aggregrateSegmentControl.isHidden = false
+        } else {
+            // Hide aggregate control in simple mode
+            aggregrateSegmentControl.isHidden = true
         }
-        aggregrateSegmentControl.selectedSegmentIndex = 0
         
         // Configure segments for chart type
         chartTypeSegmentControl.removeAllSegments()
         for (index, element) in ESPChartType.allCases.enumerated() {
             chartTypeSegmentControl.insertSegment(withTitle: element.rawValue, at: index, animated: false)
         }
+        
+        if isSimpleTimeSeries {
+            self.chartsViewHeightConstraint.constant += 36.0
+        }
+            
         chartTypeSegmentControl.selectedSegmentIndex = 0
     }
     
     // Method to customise segment appearance
     private func setSegmentAppearance() {
+        let currentBGColor = AppConstants.shared.getBGColor()
+        let backgroundImage = UIImage.getColoredRectImageWith(color: UIColor.white.cgColor, andSize: aggregrateSegmentControl.bounds.size)
+        let selectedImage = UIImage.getColoredRectImageWith(color: currentBGColor.cgColor, andSize: aggregrateSegmentControl.bounds.size)
+        
         // Set appearance for time duration segments
         durationSegmentControl.selectedSegmentIndex = 0
-        let currentBGColor = AppConstants.shared.getBGColor()
         durationSegmentControl.setTitleTextAttributes([NSAttributedString.Key.foregroundColor: UIColor.white as Any, NSAttributedString.Key.font: UIFont.systemFont(ofSize: 18.0, weight: .bold)], for: .selected)
         durationSegmentControl.setTitleTextAttributes([NSAttributedString.Key.foregroundColor: currentBGColor as Any, NSAttributedString.Key.font: UIFont.systemFont(ofSize: 14.0, weight: .heavy)], for: .normal)
         durationSegmentControl.backgroundColor = .white
         durationSegmentControl.borderColor = currentBGColor
         durationSegmentControl.borderWidth = 1.0
-        
-        // Set appearance for aggregate segments
-        aggregrateSegmentControl.setTitleTextAttributes([NSAttributedString.Key.foregroundColor: UIColor.white as Any, NSAttributedString.Key.font: UIFont.systemFont(ofSize: 18.0, weight: .heavy)], for: .selected)
-        aggregrateSegmentControl.setTitleTextAttributes([NSAttributedString.Key.foregroundColor: currentBGColor as Any, NSAttributedString.Key.font: UIFont.systemFont(ofSize: 14.0, weight: .bold)], for: .normal)
-        aggregrateSegmentControl.backgroundColor = .white
-        aggregrateSegmentControl.borderColor = currentBGColor
-        aggregrateSegmentControl.borderWidth = 1.0
-        if #available(iOS 13.0, *) {
-            durationSegmentControl.selectedSegmentTintColor = currentBGColor
-            aggregrateSegmentControl.selectedSegmentTintColor = currentBGColor
-        } else {
-            // Fallback on earlier versions
-            durationSegmentControl.tintColor = currentBGColor
-            aggregrateSegmentControl.tintColor = currentBGColor
-        }
-        let backgroundImage = UIImage.getColoredRectImageWith(color: UIColor.white.cgColor, andSize: aggregrateSegmentControl.bounds.size)
-        let selectedImage = UIImage.getColoredRectImageWith(color: currentBGColor.cgColor, andSize: aggregrateSegmentControl.bounds.size)
-        aggregrateSegmentControl.setBackgroundImage(backgroundImage, for: .normal, barMetrics: .default)
-        aggregrateSegmentControl.setBackgroundImage(selectedImage, for: .selected, barMetrics: .default)
         durationSegmentControl.setBackgroundImage(backgroundImage, for: .normal, barMetrics: .default)
         durationSegmentControl.setBackgroundImage(selectedImage, for: .selected, barMetrics: .default)
+        
+        // Set appearance for aggregate segments only if not in simple mode
+        if !isSimpleTimeSeries {
+            aggregrateSegmentControl.setTitleTextAttributes([NSAttributedString.Key.foregroundColor: UIColor.white as Any, NSAttributedString.Key.font: UIFont.systemFont(ofSize: 18.0, weight: .heavy)], for: .selected)
+            aggregrateSegmentControl.setTitleTextAttributes([NSAttributedString.Key.foregroundColor: currentBGColor as Any, NSAttributedString.Key.font: UIFont.systemFont(ofSize: 14.0, weight: .bold)], for: .normal)
+            aggregrateSegmentControl.backgroundColor = .white
+            aggregrateSegmentControl.borderColor = currentBGColor
+            aggregrateSegmentControl.borderWidth = 1.0
+        }
+        aggregrateSegmentControl.setBackgroundImage(backgroundImage, for: .normal, barMetrics: .default)
+        aggregrateSegmentControl.setBackgroundImage(selectedImage, for: .selected, barMetrics: .default)
         
         // Set appearance for chart type segment
         chartTypeSegmentControl.setTitleTextAttributes([NSAttributedString.Key.foregroundColor: UIColor.white as Any, NSAttributedString.Key.font: UIFont.systemFont(ofSize: 14.0, weight: .heavy)], for: .selected)

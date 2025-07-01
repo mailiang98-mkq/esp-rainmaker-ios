@@ -25,6 +25,7 @@ class DeviceTraitListViewController: UIViewController {
     
     // Constant keys
     let timeSeriesProperty = "time_series"
+    let simpleTimeSeriesProperty = "simple_ts"
     
     var device: Device!
     var pollingTimer: Timer!
@@ -338,8 +339,12 @@ class DeviceTraitListViewController: UIViewController {
             cell.editButton.isHidden = true
         }
         
-        if attribute.properties?.contains(timeSeriesProperty) ?? false {
+        if let properties = attribute.properties, properties.contains(timeSeriesProperty) || properties.contains(simpleTimeSeriesProperty) {
             cell.tapButton.isHidden = false
+            cell.isSimpleTimeSeries = properties.contains(simpleTimeSeriesProperty)
+            if properties.contains(timeSeriesProperty) {
+                cell.isSimpleTimeSeries = false
+            }
         } else {
             cell.tapButton.isHidden = true
         }

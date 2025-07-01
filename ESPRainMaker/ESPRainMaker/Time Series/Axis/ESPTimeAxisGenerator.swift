@@ -60,7 +60,11 @@ struct ESPTimeAxisGenerator {
                 lastModalValue = daytimeStamp.endDateTS
                 chartAxisValueGenerator = ChartAxisGeneratorMultiplier(ESPChartsConstant.hourTimeStamp * 6)
             case .day:
-                lastModalValue = lastModalValue - ESPChartsConstant.dayTimeStamp
+                let endDate = Date(timeIntervalSince1970: lastModalValue)
+                let calendar = Calendar.current
+                if let adjustedEndDate = calendar.date(bySettingHour: 23, minute: 59, second: 59, of: endDate) {
+                    lastModalValue = adjustedEndDate.timeIntervalSince1970
+                }
                 chartAxisValueGenerator = ChartAxisGeneratorMultiplier(ESPChartsConstant.dayTimeStamp)
             case .week:
                 chartAxisValueGenerator = ChartAxisGeneratorMultiplier(ESPChartsConstant.weekTimestamp)

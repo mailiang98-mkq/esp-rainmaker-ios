@@ -141,6 +141,9 @@ class GenericParamTableViewCell: GenericControlTableViewCell {
         let chartVC = deviceStoryboard.instantiateViewController(withIdentifier: "chartsVC") as! ESPChartsViewController
         chartVC.param = param
         chartVC.device = device
+        if let isSimpleTimeSeries = self.isSimpleTimeSeries {
+            chartVC.isSimpleTimeSeries = isSimpleTimeSeries
+        }
         parentViewController?.navigationController?.pushViewController(chartVC, animated: true)
     }
 }

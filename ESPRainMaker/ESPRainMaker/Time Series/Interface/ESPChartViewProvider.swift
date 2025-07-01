@@ -27,31 +27,20 @@ struct ESPChartViewProvider {
     var param: Param
     var view: UIView?
 
-    func getChartView(frame: CGRect, completionHandler: @escaping (Chart?, [ChartPoint]?, ESPNetworkError?) -> Void) {
-        fetchTSData { tsData, error in
-            DispatchQueue.main.async {
-                let chartData = ESPChartDataProvider(tsData: tsData)
-                switch tsArguments.chartType {
-                    case .lineChart:
-                    var lineChartViewProvider = ESPLineChartViewProvider(tsArguments: tsArguments, frame: frame, timezone: nil, view: view)
-                    if let tuples = chartData.getTuples(), tuples.count > 0 {
-                        lineChartViewProvider.lineChartPoints = tuples
-                        completionHandler(lineChartViewProvider.lineChart(), tuples, nil)
-                    }
-                    completionHandler(nil, nil, error)
-                    case .barChart:
-                    let barChartData = ESPChartDataProvider(tsData: tsData)
-                    var barChartViewProvider = ESPBarChartViewProvider(tsArguments: tsArguments, frame: frame, timezone: nil, view: view)
-                    if let tuples = barChartData.getTuples(), tuples.count > 0 {
-                        barChartViewProvider.barChartPoints = tuples
-                        completionHandler(barChartViewProvider.barsChart(), tuples, nil)
-                    }
-                    completionHandler(nil, nil, error)
-                }
+    func getChartView(isSimpleTS: Bool = false, frame: CGRect, completionHandler: @escaping (Chart?, [ChartPoint]?, ESPNetworkError?) -> Void) {
+        if isSimpleTS {
+            fetchSimpleTSData { tsData, error in
+                self.createChartView(tsData: tsData, error: error, frame: frame, completionHandler: completionHandler)
+            }
+        } else {
+            fetchTSData { tsData, error in
+                self.createChartView(tsData: tsData, error: error, frame: frame, completionHandler: completionHandler)
             }
         }
     }
     
+    /// Fetch time series data
+    /// - Parameter completionHandler: completion handler
     private func fetchTSData(completionHandler: @escaping (ESPTSData?,ESPNetworkError?) -> Void) {
         var weekStart: String?
         if tsArguments.timeInterval == .week {
@@ -60,6 +49,48 @@ struct ESPChartViewProvider {
         }
         tsManager.fetchTSDataFor(nodeID: device.node?.node_id ?? "", paramName: (device.name ?? "") + "." + (param.name ?? ""), dataType:param.dataType, aggregate: tsArguments.aggregate.rawValue, timeInterval:tsArguments.timeInterval.rawValue, startTime: tsArguments.duration.startTime, endTime: tsArguments.duration.endTime, weekStart: weekStart) { tsData, error in
             completionHandler(tsData, error)
+        }
+    }
+    
+    /// Fetch simple time series data
+    /// - Parameter completionHandler: completion handler
+    private func fetchSimpleTSData(completionHandler: @escaping (ESPTSData?,ESPNetworkError?) -> Void) {
+        var weekStart: String?
+        if tsArguments.timeInterval == .week {
+            let date = Date(timeIntervalSince1970: TimeInterval(tsArguments.duration.startTime))
+            weekStart = date.dayOfWeek()
+        }
+        tsManager.fetchSimpleTSDataFor(nodeID: device.node?.node_id ?? "", paramName: (device.name ?? "") + "." + (param.name ?? ""), dataType:param.dataType, startTime: tsArguments.duration.startTime, endTime: tsArguments.duration.endTime, weekStart: weekStart) { tsData, error in
+            completionHandler(tsData, error)
+        }
+    }
+    
+    /// Create a chart view
+    /// - Parameters:
+    ///   - tsData: time series data (regular/simple)
+    ///   - error: error
+    ///   - frame: chart frame
+    ///   - completionHandler: completion handler
+    private func createChartView(tsData: ESPTSData?, error: ESPNetworkError?, frame: CGRect, completionHandler: @escaping (Chart?, [ChartPoint]?, ESPNetworkError?) -> Void) {
+        DispatchQueue.main.async {
+            let chartData = ESPChartDataProvider(tsData: tsData)
+            switch tsArguments.chartType {
+                case .lineChart:
+                var lineChartViewProvider = ESPLineChartViewProvider(tsArguments: tsArguments, frame: frame, timezone: nil, view: view)
+                if let tuples = chartData.getTuples(), tuples.count > 0 {
+                    lineChartViewProvider.lineChartPoints = tuples
+                    completionHandler(lineChartViewProvider.lineChart(), tuples, nil)
+                }
+                completionHandler(nil, nil, error)
+                case .barChart:
+                let barChartData = ESPChartDataProvider(tsData: tsData)
+                var barChartViewProvider = ESPBarChartViewProvider(tsArguments: tsArguments, frame: frame, timezone: nil, view: view)
+                if let tuples = barChartData.getTuples(), tuples.count > 0 {
+                    barChartViewProvider.barChartPoints = tuples
+                    completionHandler(barChartViewProvider.barsChart(), tuples, nil)
+                }
+                completionHandler(nil, nil, error)
+            }
         }
     }
 }
