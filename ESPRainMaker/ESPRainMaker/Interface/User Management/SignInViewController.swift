@@ -34,6 +34,10 @@ protocol AgreementViewDisplayDelegate: AnyObject {
     func passwordResetSuccess()
 }
 
+protocol ClientOnlyControllerCredentialsDelegate: AnyObject {
+    func loginCompleted(cloudResponse: ESPSessionResponse, groupId: String?)
+}
+
 class SignInViewController: UIViewController, ESPNoRefreshTokenLogic, UITextViewDelegate {
     
     @IBOutlet weak var controllerSigninButton: PrimaryButton!
@@ -93,12 +97,22 @@ class SignInViewController: UIViewController, ESPNoRefreshTokenLogic, UITextView
     
     var service: ESPLoginService?
     
-    #if ESPRainMakerMatter
     var isRainmakerControllerFlow = false
     var groupId: String = ""
     var matterNodeId: String = ""
+    #if ESPRainMakerMatter
     weak var rainmakerControllerDelegate: RainmakerControllerFlowDelegate?
     #endif
+    
+    var isClientOnlyControllerFlow: Bool = false
+    weak var clientOnlyControllerDelegate: ClientOnlyControllerCredentialsDelegate?
+    
+    var isPushed: Bool {
+        if let navigationController = self.navigationController {
+            return navigationController.viewControllers.firstIndex(of: self) != 0
+        }
+        return false
+    }
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
@@ -274,7 +288,11 @@ class SignInViewController: UIViewController, ESPNoRefreshTokenLogic, UITextView
         #if ESPRainMakerMatter
         User.shared.updateDeviceList = true
         self.rainmakerControllerDelegate?.controllerFlowCancelled()
-        self.dismiss(animated: true, completion: nil)
+        if self.isPushed {
+            self.navigationController?.popViewController(animated: true)
+        } else {
+            self.dismiss(animated: true, completion: nil)
+        }
         #endif
     }
     
@@ -601,6 +619,19 @@ class SignInViewController: UIViewController, ESPNoRefreshTokenLogic, UITextView
             }
         }
     }
+    
+    /// Set client only controller flow in tne app
+    /// - Parameters:
+    ///   - isRainmakerControllerFlow: is rainmaker controller
+    ///   - isClientOnlyControllerFlow: is client only controller
+    ///   - groupId: group id
+    func setClientOnlyControllerFlow(isRainmakerControllerFlow: Bool,
+                                     isClientOnlyControllerFlow: Bool,
+                                     groupId: String) {
+        self.isRainmakerControllerFlow = isRainmakerControllerFlow
+        self.isClientOnlyControllerFlow = isClientOnlyControllerFlow
+        self.groupId = groupId
+    }
 
     #if ESPRainMakerMatter
     /// Set rainmaker properties
@@ -778,25 +809,37 @@ extension SignInViewController: UITextFieldDelegate {
 extension SignInViewController: ESPLoginPresentationLogic {
     
     func rainmakerControllerLoginCompleted(data: Data?) {
-        #if ESPRainMakerMatter
-        Utility.hideLoader(view: self.view)
-        let decoder = JSONDecoder()
-        if let data = data, let cloudResponse = try? decoder.decode(ESPSessionResponse.self, from: data) {
-            if cloudResponse.isValid {
-                self.rainmakerControllerDelegate?.cloudLoginConcluded(cloudResponse: cloudResponse, groupId: self.groupId, matterNodeId: self.matterNodeId)
-                self.dismiss(animated: true)
-            } else if let desc = cloudResponse.description {
-                self.alertUser(title: ESPMatterConstants.failureTxt,
-                               message: desc,
-                               buttonTitle: ESPMatterConstants.okTxt) {
-                    self.signInButton.isEnabled = true
+        DispatchQueue.main.async {
+            Utility.hideLoader(view: self.view)
+            let decoder = JSONDecoder()
+            if let data = data, let cloudResponse = try? decoder.decode(ESPSessionResponse.self, from: data) {
+                if cloudResponse.isValid {
+                    if self.isClientOnlyControllerFlow {
+                        self.clientOnlyControllerDelegate?.loginCompleted(cloudResponse: cloudResponse, groupId: self.groupId)
+                        self.dismiss(animated: true)
+                        return
+                    }
+                    #if ESPRainMakerMatter
+                    self.rainmakerControllerDelegate?.cloudLoginConcluded(cloudResponse: cloudResponse, groupId: self.groupId, matterNodeId: self.matterNodeId)
+                    self.dismiss(animated: true)
+                    #endif
+                } else if let desc = cloudResponse.description {
+                    self.alertUser(title: ESPMatterConstants.failureTxt,
+                                   message: desc,
+                                   buttonTitle: ESPMatterConstants.okTxt) {
+                        self.signInButton.isEnabled = true
+                    }
                 }
+            } else {
+                if self.isClientOnlyControllerFlow {
+                    return
+                }
+                #if ESPRainMakerMatter
+                self.rainmakerControllerDelegate?.cloudLoginConcluded(cloudResponse: nil, groupId: self.groupId, matterNodeId: self.matterNodeId)
+                self.dismiss(animated: true)
+                #endif
             }
-        } else {
-            self.rainmakerControllerDelegate?.cloudLoginConcluded(cloudResponse: nil, groupId: self.groupId, matterNodeId: self.matterNodeId)
-            self.dismiss(animated: true)
         }
-        #endif
     }
 
     func loginCompleted(withError error: ESPAPIError?) {

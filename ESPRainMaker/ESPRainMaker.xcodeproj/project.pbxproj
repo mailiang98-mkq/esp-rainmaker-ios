@@ -610,6 +610,8 @@
 		F84FD89F2D790B9C00919407 /* ESPMTROCSSliderTVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = F84FD89C2D790B9C00919407 /* ESPMTROCSSliderTVC.swift */; };
 		F84FD8A02D790B9C00919407 /* ESPMTROCSSliderTVC.xib in Resources */ = {isa = PBXBuildFile; fileRef = F84FD89D2D790B9C00919407 /* ESPMTROCSSliderTVC.xib */; };
 		F87C31E02DB8B0A400D0A107 /* esp_rmaker_chal_resp.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = F87C31DF2DB8B0A400D0A107 /* esp_rmaker_chal_resp.pb.swift */; };
+		F8E994792DF16C06006F406C /* ClientOnlyControllerConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8E994782DF16C05006F406C /* ClientOnlyControllerConstants.swift */; };
+		F8E9947B2DF1733F006F406C /* Node+ClientOnlyControllerUtility.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8E9947A2DF17333006F406C /* Node+ClientOnlyControllerUtility.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -1253,6 +1255,8 @@
 		F84FD89C2D790B9C00919407 /* ESPMTROCSSliderTVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ESPMTROCSSliderTVC.swift; sourceTree = "<group>"; };
 		F84FD89D2D790B9C00919407 /* ESPMTROCSSliderTVC.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = ESPMTROCSSliderTVC.xib; sourceTree = "<group>"; };
 		F87C31DF2DB8B0A400D0A107 /* esp_rmaker_chal_resp.pb.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = esp_rmaker_chal_resp.pb.swift; sourceTree = "<group>"; };
+		F8E994782DF16C05006F406C /* ClientOnlyControllerConstants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClientOnlyControllerConstants.swift; sourceTree = "<group>"; };
+		F8E9947A2DF17333006F406C /* Node+ClientOnlyControllerUtility.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Node+ClientOnlyControllerUtility.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -1371,6 +1375,7 @@
 		0C71B9D62A360B6700978005 /* Node */ = {
 			isa = PBXGroup;
 			children = (
+				F8E9947A2DF17333006F406C /* Node+ClientOnlyControllerUtility.swift */,
 				0C71B9D72A360B8000978005 /* Node+MatterUtility.swift */,
 				0CEEFE162B419877009A3343 /* Node+ControllerUtility.swift */,
 			);
@@ -2066,6 +2071,7 @@
 		F1072BBB256F9B2C00D7CE2C /* Provision */ = {
 			isa = PBXGroup;
 			children = (
+				F8E994752DF16BB5006F406C /* ClientOnlyController */,
 				F81063A82DE5E06B005BD8B6 /* ESPProvisionConstants.swift */,
 				0CAC43DB2C466B530047B1DB /* ESPScanConstants.swift */,
 				0C9850F02C2A91AD00D0E2B8 /* ScannerViewController */,
@@ -2876,6 +2882,14 @@
 			path = OCS;
 			sourceTree = "<group>";
 		};
+		F8E994752DF16BB5006F406C /* ClientOnlyController */ = {
+			isa = PBXGroup;
+			children = (
+				F8E994782DF16C05006F406C /* ClientOnlyControllerConstants.swift */,
+			);
+			path = ClientOnlyController;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -3288,6 +3302,7 @@
 				F1CC3C03295D85C20000D6DC /* FirmwareUpdateViewController.swift in Sources */,
 				0C2F511F2C92F7030031B098 /* AppMessages.swift in Sources */,
 				0CADAB812A3B3F6F0017CB07 /* ESPUpdateNodeGroupService.swift in Sources */,
+				F8E9947B2DF1733F006F406C /* Node+ClientOnlyControllerUtility.swift in Sources */,
 				F17B80E927EC68670096035A /* GroupDevicesFlowLayout.swift in Sources */,
 				F1C76D7E2689848A009E217D /* Array<String>+CombinedString.swift in Sources */,
 				F1F45152232B7ECB0009DCE0 /* Attribute.swift in Sources */,
@@ -3686,6 +3701,7 @@
 				F1BDFED327DCFC83005AF812 /* ESPAutomationTriggerAction.swift in Sources */,
 				0CD3599F2A2D47B20081017C /* DeviceCollectionViewCell.swift in Sources */,
 				0CF6923A270A308B0098F515 /* ESPAlexaAPIParser.swift in Sources */,
+				F8E994792DF16C06006F406C /* ClientOnlyControllerConstants.swift in Sources */,
 				F1124F5F268CFDB400FA0B9E /* ESPNotificationKeys+Additional.swift in Sources */,
 				F17EF2B02651661E002AC7BE /* ESPTimezone.swift in Sources */,
 			);

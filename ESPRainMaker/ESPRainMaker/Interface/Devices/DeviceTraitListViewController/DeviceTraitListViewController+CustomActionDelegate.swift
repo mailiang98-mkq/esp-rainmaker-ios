@@ -18,7 +18,30 @@
 
 extension DeviceTraitListViewController: CustomActionDelegate {
     
-    func launchController() {}
+    func launchController() {
+        if let device = self.device, let node = device.node {
+            if let baseURL = node.clientOnlyControllerBaseURLParam?.value as? String, baseURL.count > 0,
+                let groupId = node.clientOnlyControllerGroupParam?.value as? String, groupId.count > 0,
+                let userToken = node.clientOnlyControllerUserTokenParam?.value as? String, userToken.count > 0 {
+                
+                DispatchQueue.main.async {
+                    Utility.showLoader(message: "Updating device list...", view: self.view)
+                }
+                self.updateDeviceList(node: node) { status in
+                    DispatchQueue.main.async {
+                        Utility.hideLoader(view: self.view)
+                    }
+                    if let status = status, status == .success {
+                        
+                    }
+                }
+            } else {
+                
+                self.showGroupSelectionScreen()
+            }
+        }
+    }
+
     func updateThreadDataset() {}
     
     /// Set active thread dataset
@@ -362,3 +385,88 @@ extension DeviceTraitListViewController: CustomActionDelegate {
     }
 }
 
+//MARK: Client-Only-Controller
+extension DeviceTraitListViewController: ClientOnlyControllerCredentialsDelegate {
+    
+    func showGroupSelectionScreen() {
+        #if ESPRainMakerMatter
+        let storyBrd = UIStoryboard(name: ESPMatterConstants.matterStoryboardId, bundle: nil)
+        let fabricSelectionVC = storyBrd.instantiateViewController(withIdentifier: ESPFabricSelectionVC.storyboardId) as! ESPFabricSelectionVC
+        fabricSelectionVC.isClientOnlyContoller = true
+        fabricSelectionVC.clientOnlyControllerDelegate = self
+        self.navigationController?.setNavigationBarHidden(true, animated: false)
+        self.navigationController?.pushViewController(fabricSelectionVC, animated: true)
+        #endif
+    }
+    
+    /// Show Rainmaker Login Screen
+    func showRainmakerLoginScreen(groupId: String) {
+        DispatchQueue.main.async {
+            self.navigationController?.popViewController(animated: true)
+        }
+        let storyboard = UIStoryboard(name: "Login", bundle: nil)
+        if let nav = storyboard.instantiateViewController(withIdentifier: "signInController") as? UINavigationController {
+            if let signInVC = nav.viewControllers.first as? SignInViewController, let tab = self.tabBarController {
+                DispatchQueue.main.async {
+                    signInVC.setClientOnlyControllerFlow(isRainmakerControllerFlow: true,
+                                                         isClientOnlyControllerFlow: true,
+                                                         groupId: groupId)
+                    signInVC.clientOnlyControllerDelegate = self
+                    self.navigationController?.pushViewController(signInVC, animated: true)
+                }
+            }
+        }
+    }
+    
+    func loginCompleted(cloudResponse: ESPSessionResponse, groupId: String?) {
+        DispatchQueue.main.async {
+            self.navigationController?.popViewController(animated: true)
+        }
+        let baseURL = Configuration.shared.awsConfiguration.baseURL ?? ""
+        let refreshToken = cloudResponse.refreshToken ?? ""
+        
+        if refreshToken.count > 0, let finalNode = self.device.node, let groupId = groupId {
+            self.updateDeviceNOC(node: finalNode, token: refreshToken, baseURL: baseURL, groupId: groupId) { status in
+                if let status = status, status == .success {
+                    self.updateDeviceList(node: finalNode) { _ in }
+                }
+            }
+        }
+    }
+    
+    private func updateDeviceNOC(node: Node, token: String, baseURL: String, groupId: String, completion: @escaping (ESPCloudResponseStatus?) -> Void) {
+        if let serviceName = node.getServiceName(forServiceType: Constants.matterControllerServiceType), let nodeId = node.node_id, let grpIdParamName = node.clientOnlyControllerGroupParam?.name, let baseURLParamName = node.clientOnlyControllerBaseURLParam?.name, let userTokenName = node.clientOnlyControllerUserTokenParam?.name {
+            
+            let params: [String: Any] = [serviceName : [baseURLParamName: baseURL,
+                                                           userTokenName: token,
+                                                          grpIdParamName: groupId] as Any]
+            DeviceControlHelper.shared.updateParam(nodeID: nodeId, parameter: params, delegate: self) { status in
+                completion(status)
+            }
+        } else {
+            completion(nil)
+        }
+    }
+    
+    private func updateDeviceList(node: Node, completion: @escaping (ESPCloudResponseStatus?) -> Void) {
+        if let serviceName = node.getServiceName(forServiceType: Constants.matterControllerServiceType), let nodeId = node.node_id, let mtrCtlCmdName = node.clientOnlyControllerUpdateDeviceListCommandParam?.name {
+            
+            let params: [String: Any] = [serviceName : [mtrCtlCmdName: 2] as Any]
+            DeviceControlHelper.shared.updateParam(nodeID: nodeId, parameter: params, delegate: self) { status in
+                completion(status)
+            }
+        } else {
+            completion(nil)
+        }
+    }
+}
+
+#if ESPRainMakerMatter
+extension DeviceTraitListViewController: ClientOnlyControllerGroupSelectionDelegate {
+    func groupSelected(groupId: String) {
+        if groupId.count > 0 {
+            self.showRainmakerLoginScreen(groupId: groupId)
+        }
+    }
+}
+#endif
