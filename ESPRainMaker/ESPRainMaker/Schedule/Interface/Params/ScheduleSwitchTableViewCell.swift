@@ -32,6 +32,9 @@ class ScheduleSwitchTableViewCell: SwitchTableViewCell {
         leadingSpaceConstraint.constant = 30.0
         backView.backgroundColor = .white
         setupSelections()
+        
+        // Set custom color for toggle switch
+        toggleSwitch.onTintColor = UIColor(hexString: Constants.customColor)
     }
 
     @IBAction override func checkBoxPressed(_: Any) {

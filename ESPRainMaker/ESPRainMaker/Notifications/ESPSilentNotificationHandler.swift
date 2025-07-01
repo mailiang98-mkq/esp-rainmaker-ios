@@ -54,11 +54,32 @@ struct ESPSilentNotificationHandler: ESPSilentNotificationProtocol {
                     let node = User.shared.associatedNodeList![index]
                     #if ESPRainMakerMatter
                     if let nodeId = node.node_id, let controllerNodeId = node.matterControllerNode?.node_id, nodeId == controllerNodeId {
-                        ESPMatterEcosystemInfo.shared.saveControllerNotificationNodeId(nodeId: nodeID)
-                        NotificationCenter.default.post(Notification(name: Notification.Name(Constants.controllerParamUpdate)))
+                        // For controller parameter updates, fetch complete updated node info from server
+                        self.fetchUpdatedNodeInfo(nodeID: nodeID) { success in
+                            if success {
+                                // Controller node info successfully updated from server
+                                ESPMatterEcosystemInfo.shared.saveControllerNotificationNodeId(nodeId: nodeID)
+                                DispatchQueue.main.async {
+                                    NotificationCenter.default.post(Notification(name: Notification.Name(Constants.controllerParamUpdate)))
+                                }
+                                // Save updated node details for reflecting in Widget
+                                ESPLocalStorageHandler().saveNodeDetails(nodes: User.shared.associatedNodeList)
+                                if #available(iOS 14.0, *) {
+                                    WidgetCenter.shared.reloadAllTimelines()
+                                }
+                            } else {
+                                // Fallback to original controller notification behavior
+                                ESPMatterEcosystemInfo.shared.saveControllerNotificationNodeId(nodeId: nodeID)
+                                DispatchQueue.main.async {
+                                    NotificationCenter.default.post(Notification(name: Notification.Name(Constants.controllerParamUpdate)))
+                                }
+                            }
+                        }
                         return
                     }
                     #endif
+                    
+                    // For regular parameter updates, use original local update behavior
                     for key in json.keys {
                         // Get devices for which param update is received.
                         for device in node.devices ?? [] {
@@ -71,8 +92,10 @@ struct ESPSilentNotificationHandler: ESPSilentNotificationProtocol {
                                                 // Updated the param value.
                                                 param.value = paramDict[paramKey]
                                                 // Triggered local notification to let classes update their UI elements.
-                                                NotificationCenter.default.post(Notification(name: Notification.Name(Constants.reloadCollectionView)))
-                                                NotificationCenter.default.post(Notification(name: Notification.Name(Constants.reloadParamTableView)))
+                                                DispatchQueue.main.async {
+                                                    NotificationCenter.default.post(Notification(name: Notification.Name(Constants.reloadCollectionView)))
+                                                    NotificationCenter.default.post(Notification(name: Notification.Name(Constants.reloadParamTableView)))
+                                                }
                                                 // Save node details for reflecting updated parameter value in Widget.
                                                 ESPLocalStorageHandler().saveNodeDetails(nodes: User.shared.associatedNodeList)
                                                 if #available(iOS 14.0, *) {
@@ -85,12 +108,29 @@ struct ESPSilentNotificationHandler: ESPSilentNotificationProtocol {
                             }
                         }
                     }
-                } else {
-                    // Unable to parse json
-                    print("bad json")
                 }
             } catch let error as NSError {
                 print(error)
+            }
+        }
+    }
+    
+    /// Fetch updated node info from server and update associatedNodeList
+    /// - Parameters:
+    ///   - nodeID: Node ID to fetch
+    ///   - completion: Completion handler with success status
+    private func fetchUpdatedNodeInfo(nodeID: String, completion: @escaping (Bool) -> Void) {
+        NetworkManager.shared.getNodeInfo(nodeId: nodeID) { updatedNode, error in
+            if let updatedNode = updatedNode, error == nil {
+                // Update the node in associatedNodeList with fresh server data
+                if let index = User.shared.associatedNodeList?.firstIndex(where: { $0.node_id == nodeID }) {
+                    User.shared.associatedNodeList![index] = updatedNode
+                    completion(true)
+                } else {
+                    completion(false)
+                }
+            } else {
+                completion(false)
             }
         }
     }

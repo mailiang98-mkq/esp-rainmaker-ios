@@ -208,7 +208,7 @@ extension MatterControllerParser {
     /// - Returns: value of attribute
     func getFinalClusterAttributeValue(finalEndpointsData: [String: MatterEndpointData], endpointId: String, clusterId: String, attributeId: String) -> Any? {
         if let endpointData = finalEndpointsData[endpointId] as? MatterEndpointData, let clustersData = endpointData.clustersData {
-            if let servers = clustersData[clusterId] as? [MatterServersData] {
+            if let cluster = clustersData[clusterId] as? MatterClusterData, let servers = cluster.servers {
                 for server in servers {
                     if let attributes = server.attributes {
                         if let attributeValue = attributes[attributeId] as? Any {

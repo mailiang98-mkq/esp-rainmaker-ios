@@ -33,12 +33,16 @@ extension ESPNotificationHandler {
                 }
                 ESPLocalStorageHandler().saveNodeDetails(nodes: User.shared.associatedNodeList)
                 // Triggered local notification to let classes update their UI elements.
-                NotificationCenter.default.post(Notification(name: Notification.Name(Constants.reloadCollectionView)))
-                NotificationCenter.default.post(Notification(name: Notification.Name(Constants.reloadParamTableView)))
+                DispatchQueue.main.async {
+                    NotificationCenter.default.post(Notification(name: Notification.Name(Constants.reloadCollectionView)))
+                    NotificationCenter.default.post(Notification(name: Notification.Name(Constants.reloadParamTableView)))
+                }
             }
         case .nodeDissassociated:
             // Triggered local notification to update device list.
-            NotificationCenter.default.post(Notification(name: Notification.Name(Constants.refreshDeviceList)))
+            DispatchQueue.main.async {
+                NotificationCenter.default.post(Notification(name: Notification.Name(Constants.refreshDeviceList)))
+            }
         case .nodeGroupAdded:
             if let groups = eventData[ESPNotificationKeys.groups] as? [String:Any], let groupName = groups[ESPNotificationKeys.groupName] as? String {
                 self.notification.body = "New group(s) [\(groupName)] added."

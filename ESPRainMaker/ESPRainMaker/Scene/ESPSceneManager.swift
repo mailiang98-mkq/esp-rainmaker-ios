@@ -104,9 +104,18 @@ class ESPSceneManager: CommonDeviceServicesProtocol {
                                 }
                             }
                         }
-                        if copyDevice.params!.count > 0 {
+                        if copyDevice.params?.count ?? 0 > 0 {
                             let key = [copyDevice.node?.node_id, copyDevice.name].compactMap { $0 }.joined(separator: ".")
                             ESPSceneManager.shared.availableDevices[key] = copyDevice
+                            
+                            // Parse and save any existing scenes from the node's scene service
+                            if let sceneService = node.services?.first(where: { $0.type == Constants.sceneServiceType }),
+                               let sceneParam = sceneService.params?.first(where: { $0.type == Constants.sceneParamType }),
+                               let scenes = sceneParam.value as? [[String: Any]] {
+                                for scene in scenes {
+                                    saveScenesFromJSON(nodeID: node.node_id ?? "", sceneJSON: scene)
+                                }
+                            }
                         }
                     }
                 }

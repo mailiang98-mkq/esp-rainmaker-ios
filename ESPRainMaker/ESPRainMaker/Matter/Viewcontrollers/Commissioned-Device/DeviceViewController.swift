@@ -106,10 +106,21 @@ class DeviceViewController: UIViewController {
         self.setNavigationTextAttributes(color: .darkGray)
         tabBarController?.tabBar.isHidden = true
         NotificationCenter.default.addObserver(self, selector: #selector(appEnterForeground), name: UIApplication.willEnterForegroundNotification, object: nil)
+        
+        // Listen for controller parameter updates when in controller mode
+        if nodeConnectionStatus == .controller {
+            NotificationCenter.default.addObserver(self, selector: #selector(controllerParamUpdateReceived), name: Notification.Name(Constants.controllerParamUpdate), object: nil)
+        }
     }
     
     override func viewWillDisappear(_ animated: Bool) {
         NotificationCenter.default.removeObserver(self, name: UIApplication.willEnterForegroundNotification, object: nil)
+        
+        #if ESPRainMakerMatter
+        if nodeConnectionStatus == .controller {
+            NotificationCenter.default.removeObserver(self, name: Notification.Name(Constants.controllerParamUpdate), object: nil)
+        }
+        #endif
     }
     
     @objc func appEnterForeground() {
@@ -123,6 +134,23 @@ class DeviceViewController: UIViewController {
             self.deviceTableView.reloadData()
             DispatchQueue.main.asyncAfter(deadline: .now()+2.0) {
                 Utility.hideLoader(view: self.view)
+            }
+        }
+    }
+    
+    @objc func controllerParamUpdateReceived() {
+        // Update local rainmakerNode object from updated associatedNodeList
+        if let rainmakerNode = self.rainmakerNode, let nodeId = rainmakerNode.node_id {
+            // Find the updated node in associatedNodeList
+            if let updatedNode = User.shared.associatedNodeList?.first(where: { $0.node_id == nodeId }) {
+                self.rainmakerNode = updatedNode
+                
+                // Reload the device table view on main thread
+                DispatchQueue.main.async {
+                    if self.presentedViewController == nil {
+                        self.deviceTableView.reloadData()
+                    }
+                }
             }
         }
     }

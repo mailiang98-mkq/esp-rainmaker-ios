@@ -24,6 +24,7 @@ struct ESPMatterConstants {
     static let emptyString = ""
     static let commissioning = "Commissioning"
     static let controller = "controller"
+    static let threadBR = "thread_border_router"
     static let acceptedSharings = "acceptedSharings"
     static let pendingNodeGroupRequests = "pendingNodeGroupRequests"
     static let requestsSent = "requestsSent"
@@ -136,6 +137,9 @@ struct ESPMatterConstants {
     
     static let onOffCluster = "OnOff Cluster"
     static let tempMeasurementCluster = "Termperature Measurement Cluster"
+    
+    static let lock = "lock"
+    static let externalBlinds = "external_blinds"
     
     /// API keys
     static let id = "id"

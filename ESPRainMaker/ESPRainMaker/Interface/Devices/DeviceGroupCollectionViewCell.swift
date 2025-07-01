@@ -379,6 +379,12 @@ extension DeviceGroupCollectionViewCell: UICollectionViewDataSource {
             cell.deviceImage.image = UIImage(named: ESPMatterConstants.outletDevice)
         } else if ESPMatterClusterUtil.shared.isRainmakerControllerServerSupported(groupId: groupId, deviceId: deviceId).0 {
             cell.deviceImage.image = UIImage(named: ESPMatterConstants.controller)
+        } else if ESPMatterClusterUtil.shared.isTBRMSupported(groupId: groupId, deviceId: deviceId).0 {
+            cell.deviceImage.image = UIImage(named: ESPMatterConstants.threadBR)
+        } else if ESPMatterClusterUtil.shared.isDoorLockServerSupported(groupId: groupId, deviceId: deviceId).0 {
+            cell.deviceImage.image = UIImage(named: ESPMatterConstants.lock)
+        } else if ESPMatterClusterUtil.shared.isWindowCoveringServerSupported(groupId: groupId, deviceId: deviceId).0 {
+            cell.deviceImage.image = UIImage(named: ESPMatterConstants.externalBlinds)
         }
         cell.rainmakerNode = rainmakerNode
     }

@@ -43,6 +43,9 @@ class ParamSwitchTableViewCell: SwitchTableViewCell {
         layer.shadowRadius = 2
         layer.shadowColor = UIColor.black.cgColor
         layer.masksToBounds = false
+        
+        // Set custom color for toggle switch
+        toggleSwitch.onTintColor = UIColor(hexString: Constants.customColor)
     }
 
     @IBAction override func switchStateChanged(_ sender: UISwitch) {

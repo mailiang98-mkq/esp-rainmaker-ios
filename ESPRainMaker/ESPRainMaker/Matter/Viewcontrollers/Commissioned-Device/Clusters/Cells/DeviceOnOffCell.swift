@@ -183,13 +183,25 @@ class DeviceOnOffCell: UITableViewCell {
     
     /// Setup offline UI
     func setupOfflineUI(deviceId: UInt64) {
-        DispatchQueue.main.async {
-            if let node = self.node, let status = node.isMatterLightOn(deviceId: deviceId) {
-                self.toggleSwitch.setOn(status, animated: true)
-                self.onOffStatus.text = status ? ESPMatterConstants.onTxt : ESPMatterConstants.offTxt
-            } else {
-                self.toggleSwitch.setOn(false, animated: true)
-                self.onOffStatus.text = ESPMatterConstants.offTxt
+        if self.nodeConnectionStatus == .controller {
+            if let node = self.node, let rainmakerNode = node.getRainmakerNode(), let controller = rainmakerNode.matterControllerNode, let controllerNodeId = controller.node_id, let matterNodeId = rainmakerNode.matter_node_id, let matterDeviceId = matterNodeId.hexToDecimal {
+                if let value = MatterControllerParser.shared.getOnOffValue(controllerNodeId: controllerNodeId, matterNodeId: matterNodeId) {
+                    node.setMatterLightOnStatus(status: value, deviceId: matterDeviceId)
+                    DispatchQueue.main.async {
+                        self.toggleSwitch.setOn(value, animated: true)
+                        self.onOffStatus.text = value ? ESPMatterConstants.onTxt : ESPMatterConstants.offTxt
+                    }
+                }
+            }
+        } else {
+            DispatchQueue.main.async {
+                if let node = self.node, let status = node.isMatterLightOn(deviceId: deviceId) {
+                    self.toggleSwitch.setOn(status, animated: true)
+                    self.onOffStatus.text = status ? ESPMatterConstants.onTxt : ESPMatterConstants.offTxt
+                } else {
+                    self.toggleSwitch.setOn(false, animated: true)
+                    self.onOffStatus.text = ESPMatterConstants.offTxt
+                }
             }
         }
     }

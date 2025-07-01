@@ -141,6 +141,11 @@ class DeviceCollectionViewCell: UICollectionViewCell {
         var showLight = false
         self.connectionStatus = status
         self.accessibilityButton.text = status.description + "  "
+        if status == .offline {
+            if let node = self.rainmakerNode, node.isRainmakerMatter {
+                self.accessibilityButton.text = "Offline at \(node.timestamp.getShortDate())" + "  "
+            }
+        }
         if let group = self.group, let groupId = group.groupID, let node = self.node, let deviceId = node.deviceId {
             if ESPMatterClusterUtil.shared.isOnOffServerSupported(groupId: groupId, deviceId: deviceId).0 {
                 DispatchQueue.main.async {
@@ -181,10 +186,12 @@ class DeviceCollectionViewCell: UICollectionViewCell {
     
     func setToggleStatusFromControllerConfig() {
         if let node = self.rainmakerNode, let controllerNode = node.matterControllerNode, let controllerNodeId = controllerNode.node_id, let matterNodeId = node.matter_node_id, let onOffStatus = MatterControllerParser.shared.getOnOffValue(controllerNodeId: controllerNodeId, matterNodeId: matterNodeId) {
-            if onOffStatus {
-                self.onOffButton.image = UIImage(named: "switch_on")
-            } else {
-                self.onOffButton.image = UIImage(named: "switch_off")
+            DispatchQueue.main.async {
+                if onOffStatus {
+                    self.onOffButton.image = UIImage(named: "switch_on")
+                } else {
+                    self.onOffButton.image = UIImage(named: "switch_off")
+                }
             }
         }
     }
@@ -215,6 +222,16 @@ class DeviceCollectionViewCell: UICollectionViewCell {
                 self.onOffButton.image = UIImage(named: "switch_on")
             } else {
                 self.onOffButton.image = UIImage(named: "switch_off")
+            }
+        }
+    }
+    
+    /// Refresh UI from controller data when controller parameters are updated
+    /// This method should be called when controller data changes via push notifications
+    func refreshFromControllerData() {
+        if connectionStatus == .controller {
+            DispatchQueue.main.async {
+                self.setToggleStatusFromControllerConfig()
             }
         }
     }

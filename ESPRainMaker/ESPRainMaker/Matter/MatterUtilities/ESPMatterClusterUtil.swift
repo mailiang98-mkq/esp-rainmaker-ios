@@ -179,6 +179,25 @@ public class ESPMatterClusterUtil {
         return isServerClusterSupported(groupId: groupId, deviceId: deviceId, clusterId: thermostat.clusterId.uintValue)
     }
     
+    /// Is door lock supported
+    /// - Parameters:
+    ///   - groupId: group id
+    ///   - deviceId: device id
+    /// - Returns: (result, endpoint id)
+    public func isDoorLockServerSupported(groupId: String, deviceId: UInt64) -> (Bool, String?) {
+        return isServerClusterSupported(groupId: groupId, deviceId: deviceId, clusterId: doorLock.clusterId.uintValue)
+    }
+    
+    /// Is door lock supported
+    /// - Parameters:
+    ///   - groupId: group id
+    ///   - deviceId: device id
+    /// - Returns: (result, endpoint id)
+    public func isWindowCoveringServerSupported(groupId: String, deviceId: UInt64) -> (Bool, String?) {
+        return isServerClusterSupported(groupId: groupId, deviceId: deviceId, clusterId: windowCovering.clusterId.uintValue)
+    }
+
+    
     /// Is on off attribute supported
     /// - Parameters:
     ///   - groupId: group id

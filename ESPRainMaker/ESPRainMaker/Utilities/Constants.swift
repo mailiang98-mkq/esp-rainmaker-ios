@@ -184,6 +184,7 @@ struct Constants {
     static let paramMatterDevices = "esp.param.matter-devices"
     static let paramMatterControllerDataVersion = "esp.param.matter-controller-data-version"
     static let paramMatterControllerData = "esp.param.matter-controller-data"
+    static let controllerDeviceType = "esp.device.matter-controller"
     
     // APIs JSON keys
     static let contentType = "Content-Type"

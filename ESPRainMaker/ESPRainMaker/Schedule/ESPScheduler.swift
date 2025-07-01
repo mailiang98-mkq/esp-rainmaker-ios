@@ -243,9 +243,18 @@ class ESPScheduler: CommonDeviceServicesProtocol {
                                 }
                             }
                         }
-                        if copyDevice.params!.count > 0 {
+                        if copyDevice.params?.count ?? 0 > 0 {
                             let key = [copyDevice.node?.node_id, copyDevice.name].compactMap { $0 }.joined(separator: ".")
                             ESPScheduler.shared.availableDevices[key] = copyDevice
+                            
+                            // Parse and save any existing schedules from the node's schedule service
+                            if let scheduleService = node.services?.first(where: { $0.type == Constants.scheduleServiceType }),
+                               let scheduleParam = scheduleService.params?.first(where: { $0.type == Constants.scheduleParamType }),
+                               let schedules = scheduleParam.value as? [[String: Any]] {
+                                for schedule in schedules {
+                                    saveScheduleListFromJSON(nodeID: node.node_id ?? "", scheduleJSON: schedule)
+                                }
+                            }
                         }
                     }
                 }

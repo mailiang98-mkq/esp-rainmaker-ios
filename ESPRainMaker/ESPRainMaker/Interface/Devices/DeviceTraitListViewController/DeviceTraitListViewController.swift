@@ -166,7 +166,38 @@ class DeviceTraitListViewController: UIViewController {
     }
 
     @objc func reloadParamTableView() {
-        self.reloadTableView()
+        // Force immediate reload for silent notification updates
+        // Update local device object with latest parameter values from global node list
+        updateLocalDeviceFromGlobalNodeList()
+        
+        // Refresh the dataSource array with updated parameter values
+        checkForCentralParam()
+        
+        // Skip next attribute update to prevent polling timer from overwriting silent notification updates
+        skipNextAttributeUpdate = true
+        
+        // Check if alert view is presented before trying to reload the param values.
+        if self.presentedViewController == nil {
+            self.tableView.reloadData()
+        }
+    }
+
+    /// Update local device object with latest parameter values from global node list
+    private func updateLocalDeviceFromGlobalNodeList() {
+        if let nodes = User.shared.associatedNodeList {
+            for node in nodes {
+                if let associatedNodeId = node.node_id, let nodeId = device.node?.node_id, associatedNodeId == nodeId {
+                    // Update the node reference
+                    device.node = node
+                    
+                    // Find and update the device with latest parameter values
+                    if let updatedDevice = node.devices?.first(where: { $0.name == device.name }) {
+                        self.device = updatedDevice
+                    }
+                    break
+                }
+            }
+        }
     }
 
     @objc func appEnterForeground() {
@@ -269,7 +300,12 @@ class DeviceTraitListViewController: UIViewController {
                 offlineLabel.text = "Reachable on WLAN"
             }
         } else if device?.node?.isConnected ?? true {
-            offlineLabel.text = ""
+            // Check if this is a Rainmaker+Matter device connected remotely
+            if let node = device?.node, node.isMatter, node.isRainmakerMatter {
+                offlineLabel.text = "Remote"
+            } else {
+                offlineLabel.text = ""
+            }
         } else {
             offlineLabel.text = device?.node?.nodeStatus ?? ""
         }
@@ -280,7 +316,13 @@ class DeviceTraitListViewController: UIViewController {
         if let nodes = User.shared.associatedNodeList {
             for node in nodes {
                 if let associatedNodeId = node.node_id, let nodeId = device.node?.node_id, associatedNodeId == nodeId {
+                    // Update the node reference
                     device.node = node
+                    
+                    // Find and update the device with latest parameter values
+                    if let updatedDevice = node.devices?.first(where: { $0.name == device.name }) {
+                        self.device = updatedDevice
+                    }
                     break
                 }
             }
@@ -335,6 +377,7 @@ class DeviceTraitListViewController: UIViewController {
         cell.controlValueLabel.text = cell.controlValue
         if attribute.properties?.contains("write") ?? false, device!.node?.isConnected ?? false {
             cell.editButton.isHidden = false
+            cell.editButton.setTitleColor(UIColor(hexString: Constants.customColor), for: .normal)
         } else {
             cell.editButton.isHidden = true
         }
