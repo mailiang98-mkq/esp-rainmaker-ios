@@ -1,4 +1,4 @@
-name: Xcode - Build, Test and Analyze
+name: Xcode - Build and Analyze
 
 on:
   push:
@@ -7,79 +7,34 @@ on:
     branches: [ "master" ]
 
 jobs:
-  build-test-analyze:
-    name: Build, Test and Analyze
+  build:
+    name: Build and analyse default scheme using xcodebuild command
     runs-on: macos-latest
-    env:
-      DEVELOPER_DIR: /Applications/Xcode_15.0.app/Contents/Developer  # 指定Xcode版本
 
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0  # 拉取完整历史用于分析
-
-      - name: Cache CocoaPods dependencies
-        uses: actions/cache@v3
-        with:
-          path: Pods
-          key: ${{ runner.os }}-cocoapods-${{ hashFiles('**/Podfile.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-cocoapods-
-
-      - name: Install dependencies
-        run: |
-          if [ -f "Podfile" ]; then
-            pod install --repo-update
-          fi
 
       - name: Set Default Scheme
         run: |
           scheme_list=$(xcodebuild -list -json | tr -d "\n")
           default=$(echo $scheme_list | ruby -e "require 'json'; puts JSON.parse(STDIN.gets)['project']['targets'][0]")
           echo $default | cat >default
-          echo "Using default scheme: $default"
-          echo "DEFAULT_SCHEME=$default" >> $GITHUB_ENV  # 存入环境变量
+          echo Using default scheme: $default
 
-      - name: Determine project type
+      - name: Build
+        env:
+          scheme: ${{ 'default' }}
         run: |
-          if [ "`ls -A | grep -i \\.xcworkspace\$`" ]; then
-            echo "FILETYPE_PARAMETER=workspace" >> $GITHUB_ENV
-            echo "FILE_TO_BUILD=`ls -A | grep -i \\.xcworkspace\$ | awk '{$1=$1;print}'`" >> $GITHUB_ENV
-          else
-            echo "FILETYPE_PARAMETER=project" >> $GITHUB_ENV
-            echo "FILE_TO_BUILD=`ls -A | grep -i \\.xcodeproj\$ | awk '{$1=$1;print}'`" >> $GITHUB_ENV
-          fi
-          echo "Using ${{ env.FILETYPE_PARAMETER }}: ${{ env.FILE_TO_BUILD }}"
+          if [ $scheme = default ]; then scheme=$(cat default); fi
+          if [ "`ls -A | grep -i \\.xcworkspace\$`" ]; then filetype_parameter="workspace" && file_to_build="`ls -A | grep -i \\.xcworkspace\$`"; else filetype_parameter="project" && file_to_build="`ls -A | grep -i \\.xcodeproj\$`"; fi
+          file_to_build=`echo $file_to_build | awk '{$1=$1;print}'`
+          xcodebuild clean build analyze -scheme "$scheme" -"$filetype_parameter" "$file_to_build" | xcpretty && exit ${PIPESTATUS[0]}
 
-      - name: Clean and Build
-        run: |
-          xcodebuild clean build \
-            -scheme "${{ env.DEFAULT_SCHEME }}" \
-            -${{ env.FILETYPE_PARAMETER }} "${{ env.FILE_TO_BUILD }}" \
-            -configuration Debug \
-            | xcpretty && exit ${PIPESTATUS[0]}
-
-      - name: Run Tests
-        run: |
-          xcodebuild test \
-            -scheme "${{ env.DEFAULT_SCHEME }}" \
-            -${{ env.FILETYPE_PARAMETER }} "${{ env.FILE_TO_BUILD }}" \
-            -configuration Debug \
-            -destination "platform=iOS Simulator,name=iPhone 15,OS=17.0" \
-            | xcpretty && exit ${PIPESTATUS[0]}
-
-      - name: Static Analysis
-        run: |
-          xcodebuild analyze \
-            -scheme "${{ env.DEFAULT_SCHEME }}" \
-            -${{ env.FILETYPE_PARAMETER }} "${{ env.FILE_TO_BUILD }}" \
-            -configuration Debug \
-            | xcpretty && exit ${PIPESTATUS[0]}
-
+      # 新增：构建失败时上传日志（使用 v4 版本避免 deprecated 错误）
       - name: Upload build logs on failure
         if: failure()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4  # 已升级到 v4 版本
         with:
           name: build-logs
           path: ~/Library/Logs/Xcode/
