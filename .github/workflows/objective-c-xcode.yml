@@ -15,48 +15,56 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install CocoaPods dependencies
+      - name: Locate Xcode project/workspace
         run: |
-          # 确保CocoaPods安装并更新依赖
-          pod install --repo-update
-
-      - name: Set Default Scheme
-        run: |
-          # 查找项目/工作区（优先工作区，因为pod install通常生成.xcworkspace）
-          if [ -n "$(ls -A | grep -i \.xcworkspace$)" ]; then
-            filetype="workspace"
-            file=$(ls -A | grep -i \.xcworkspace$ | head -n 1)
+          # 查找项目/工作区（支持子目录）
+          proj_files=$(find . -maxdepth 3 -type d -name "*.xcodeproj" | head -n 1)
+          workspace_files=$(find . -maxdepth 3 -type d -name "*.xcworkspace" | head -n 1)
+          
+          if [ -n "$workspace_files" ]; then
+            echo "FILETYPE_PARAMETER=workspace" >> $GITHUB_ENV
+            echo "FILE_TO_BUILD=$workspace_files" >> $GITHUB_ENV
+            echo "Found workspace: $workspace_files"
+          elif [ -n "$proj_files" ]; then
+            echo "FILETYPE_PARAMETER=project" >> $GITHUB_ENV
+            echo "FILE_TO_BUILD=$proj_files" >> $GITHUB_ENV
+            echo "Found project: $proj_files"
           else
-            filetype="project"
-            file=$(ls -A | grep -i \.xcodeproj$ | head -n 1)
+            echo "Error: No Xcode project or workspace found"
+            exit 1
+          fi
+
+      - name: Get default scheme (修复JSON解析和多结构兼容)
+        run: |
+          # 获取JSON并处理格式
+          scheme_json=$(xcodebuild -list -json -${{ env.FILETYPE_PARAMETER }} "${{ env.FILE_TO_BUILD }}" | tr -d '\n')
+          
+          # 兼容workspace.schemes和project.targets/schemes
+          default_scheme=$(echo "$scheme_json" | ruby -e '
+            require "json"
+            begin
+              data = JSON.parse(STDIN.gets)
+              schemes = data["workspace"] && data["workspace"]["schemes"] || 
+                        data["project"] && (data["project"]["schemes"] || data["project"]["targets"])
+              puts schemes ? schemes.first : nil
+            rescue JSON::ParserError => e
+              puts "JSON解析错误: #{e.message}"
+              exit 1
+            end
+          ')
+          
+          if [ -z "$default_scheme" ]; then
+            echo "Error: 未找到可用的scheme"
+            exit 1
           fi
           
-          # 从正确的文件中获取scheme列表
-          scheme_list=$(xcodebuild -list -json -$filetype "$file" | tr -d "\n")
-          # 兼容workspace的schemes和project的targets
-          default=$(echo "$scheme_list" | ruby -e '
-            require "json"
-            data = JSON.parse(STDIN.gets)
-            schemes = data["workspace"] && data["workspace"]["schemes"] || data["project"] && (data["project"]["schemes"] || data["project"]["targets"])
-            puts schemes ? schemes.first : nil
-          ')
-          echo "$default" > default
-          echo "Using default scheme: $default"
+          echo "DEFAULT_SCHEME=$default_scheme" >> $GITHUB_ENV
+          echo "使用默认scheme: $default_scheme"
 
-      - name: Build
+      - name: Build (指定目标平台解决多目的地警告)
         run: |
-          scheme=$(cat default)
-          # 再次确认项目/工作区类型
-          if [ -n "$(ls -A | grep -i \.xcworkspace$)" ]; then
-            filetype_parameter="workspace"
-            file_to_build=$(ls -A | grep -i \.xcworkspace$ | head -n 1)
-          else
-            filetype_parameter="project"
-            file_to_build=$(ls -A | grep -i \.xcodeproj$ | head -n 1)
-          fi
-          # 指定构建目标平台（解决多目标警告）
           xcodebuild clean build analyze \
-            -scheme "$scheme" \
-            -$filetype_parameter "$file_to_build" \
+            -scheme "${{ env.DEFAULT_SCHEME }}" \
+            -${{ env.FILETYPE_PARAMETER }} "${{ env.FILE_TO_BUILD }}" \
             -destination "platform=iOS Simulator,name=iPhone 15" \
             | xcpretty && exit ${PIPESTATUS[0]}
