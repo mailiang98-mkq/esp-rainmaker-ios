@@ -58,6 +58,6 @@ jobs:
           xcodebuild clean build \
             -scheme "${{ env.DEFAULT_SCHEME }}" \
             -${{ env.FILE_TYPE }} "${{ env.FILE_PATH }}" \
-            -destination "platform=iOS Simulator,name=Any iOS Simulator Device" \
+            -destination "platform=iOS Simulator,name=iPhone SE (3rd generation),OS=18.4" \  # 选择明确存在的设备+OS版本
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO
