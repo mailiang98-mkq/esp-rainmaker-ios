@@ -15,11 +15,9 @@ jobs:
 
       - name: Locate Xcode project/workspace in subdirectory
         run: |
-          # 查找子目录中的项目文件（优先工作区，支持最多2层子目录）
           WORKSPACE=$(find . -maxdepth 2 -type d -name "*.xcworkspace" | head -n 1)
           PROJECT=$(find . -maxdepth 2 -type d -name "*.xcodeproj" | head -n 1)
           
-          # 确定实际存在的项目文件
           if [ -n "$WORKSPACE" ]; then
             echo "FILE_PATH=$WORKSPACE" >> $GITHUB_ENV
             echo "FILE_TYPE=workspace" >> $GITHUB_ENV
@@ -35,13 +33,11 @@ jobs:
 
       - name: Get default scheme from project
         run: |
-          # 从找到的项目文件中提取scheme列表
           SCHEME_JSON=$(xcodebuild -list -json -${{ env.FILE_TYPE }} "${{ env.FILE_PATH }}" | tr -d '\n')
           DEFAULT_SCHEME=$(echo "$SCHEME_JSON" | ruby -e '
             require "json"
             begin
               data = JSON.parse(STDIN.gets)
-              # 兼容workspace的schemes和project的targets
               schemes = data["workspace"] && data["workspace"]["schemes"] || 
                         data["project"] && (data["project"]["schemes"] || data["project"]["targets"])
               puts schemes ? schemes.first : nil
@@ -62,6 +58,6 @@ jobs:
           xcodebuild clean build \
             -scheme "${{ env.DEFAULT_SCHEME }}" \
             -${{ env.FILE_TYPE }} "${{ env.FILE_PATH }}" \
-            -destination "platform=iOS Simulator,name=iPhone 16" \
+            -destination "platform=iOS Simulator,name=Any iOS Simulator Device" \  # 使用通用模拟器目标
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO
