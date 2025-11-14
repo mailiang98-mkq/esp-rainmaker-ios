@@ -1,41 +1,67 @@
-name: Xcode - Build and Analyze
+name: ESP RainMaker iOS Build
 
 on:
   push:
-    branches: [ "master" ]
+    branches: [ main, master ]
   pull_request:
-    branches: [ "master" ]
+    branches: [ main, master ]
 
 jobs:
   build:
-    name: Build and analyse default scheme using xcodebuild command
     runs-on: macos-latest
-
     steps:
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@v4
-      - name: Set Default Scheme
+
+      - name: Locate Xcode project/workspace in subdirectory
         run: |
-          scheme_list=$(xcodebuild -list -json | tr -d "\n")
-          # 兼容workspace和project的JSON结构（同时支持schemes和targets）
-          default=$(echo $scheme_list | ruby -e "require 'json'; data = JSON.parse(STDIN.gets); puts data['workspace'] && data['workspace']['schemes'][0] || data['project']['schemes'][0] || data['project']['targets'][0]")
-          echo $default | cat >default
-          echo Using default scheme: $default
-      - name: Build
-        env:
-          scheme: ${{ 'default' }}
-        run: |
-          if [ $scheme = default ]; then scheme=$(cat default); fi
-          # 查找工作区或项目文件
-          if [ "`ls -A | grep -i \\.xcworkspace\$`" ]; then 
-            filetype_parameter="workspace" && file_to_build="`ls -A | grep -i \\.xcworkspace\$`"; 
-          else 
-            filetype_parameter="project" && file_to_build="`ls -A | grep -i \\.xcodeproj\$`"; 
+          # 查找子目录中的项目文件（优先工作区，支持最多2层子目录）
+          WORKSPACE=$(find . -maxdepth 2 -type d -name "*.xcworkspace" | head -n 1)
+          PROJECT=$(find . -maxdepth 2 -type d -name "*.xcodeproj" | head -n 1)
+          
+          # 确定实际存在的项目文件
+          if [ -n "$WORKSPACE" ]; then
+            echo "FILE_PATH=$WORKSPACE" >> $GITHUB_ENV
+            echo "FILE_TYPE=workspace" >> $GITHUB_ENV
+            echo "Found workspace: $WORKSPACE"
+          elif [ -n "$PROJECT" ]; then
+            echo "FILE_PATH=$PROJECT" >> $GITHUB_ENV
+            echo "FILE_TYPE=project" >> $GITHUB_ENV
+            echo "Found project: $PROJECT"
+          else
+            echo "Error: No Xcode project/workspace found in subdirectories"
+            exit 1
           fi
-          file_to_build=`echo $file_to_build | awk '{$1=$1;print}'`
-          # 使用存在的iPhone 16模拟器（从日志中选择可用设备）
-          xcodebuild clean build analyze \
-            -scheme "$scheme" \
-            -"$filetype_parameter" "$file_to_build" \
+
+      - name: Get default scheme from project
+        run: |
+          # 从找到的项目文件中提取scheme列表
+          SCHEME_JSON=$(xcodebuild -list -json -${{ env.FILE_TYPE }} "${{ env.FILE_PATH }}" | tr -d '\n')
+          DEFAULT_SCHEME=$(echo "$SCHEME_JSON" | ruby -e '
+            require "json"
+            begin
+              data = JSON.parse(STDIN.gets)
+              # 兼容workspace的schemes和project的targets
+              schemes = data["workspace"] && data["workspace"]["schemes"] || 
+                        data["project"] && (data["project"]["schemes"] || data["project"]["targets"])
+              puts schemes ? schemes.first : nil
+            rescue
+              puts "Error parsing scheme JSON"
+              exit 1
+            end
+          ')
+          
+          if [ -z "$DEFAULT_SCHEME" ]; then
+            echo "Error: No valid scheme found"
+            exit 1
+          fi
+          echo "DEFAULT_SCHEME=$DEFAULT_SCHEME" >> $GITHUB_ENV
+
+      - name: Build with Xcode
+        run: |
+          xcodebuild clean build \
+            -scheme "${{ env.DEFAULT_SCHEME }}" \
+            -${{ env.FILE_TYPE }} "${{ env.FILE_PATH }}" \
             -destination "platform=iOS Simulator,name=iPhone 16" \
-            | xcpretty && exit ${PIPESTATUS[0]}
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO
