@@ -21,15 +21,23 @@ jobs:
           if [ -n "$WORKSPACE" ]; then
             echo "FILE_PATH=$WORKSPACE" >> $GITHUB_ENV
             echo "FILE_TYPE=workspace" >> $GITHUB_ENV
+            echo "PROJECT_DIR=$(dirname "$WORKSPACE")" >> $GITHUB_ENV  # 记录项目目录
             echo "Found workspace: $WORKSPACE"
           elif [ -n "$PROJECT" ]; then
             echo "FILE_PATH=$PROJECT" >> $GITHUB_ENV
             echo "FILE_TYPE=project" >> $GITHUB_ENV
+            echo "PROJECT_DIR=$(dirname "$PROJECT")" >> $GITHUB_ENV  # 记录项目目录
             echo "Found project: $PROJECT"
           else
             echo "Error: No Xcode project/workspace found in subdirectories"
             exit 1
           fi
+
+      - name: Install CocoaPods dependencies
+        run: |
+          # 进入项目目录执行 pod install
+          cd "${{ env.PROJECT_DIR }}"
+          pod install --repo-update  # 强制更新仓库，确保依赖拉取完整
 
       - name: Get default scheme from project
         run: |
