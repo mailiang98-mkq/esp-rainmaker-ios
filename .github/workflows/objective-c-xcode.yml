@@ -34,27 +34,33 @@ jobs:
             exit 1
           fi
 
-      - name: Get default scheme (兼容项目和工作区)
+      - name: Get default scheme (修复JSON解析和结构问题)
         run: |
-          # 获取JSON结构并兼容不同格式
-          scheme_json=$(xcodebuild -list -json -${{ env.FILETYPE_PARAMETER }} "${{ env.FILE_TO_BUILD }}")
-          echo "Raw JSON: $scheme_json"  # 调试用，可删除
+          # 获取JSON并去除换行符（关键修复：避免解析时的格式错误）
+          scheme_json=$(xcodebuild -list -json -${{ env.FILETYPE_PARAMETER }} "${{ env.FILE_TO_BUILD }}" | tr -d '\n')
           
-          # 尝试从project或workspace节点获取targets
+          # 解析JSON，优先从schemes获取（你的工作区返回的是schemes数组）
           default_scheme=$(echo "$scheme_json" | ruby -e '
             require "json"
-            data = JSON.parse(STDIN.gets)
-            targets = data["project"] && data["project"]["targets"] || data["workspace"] && data["workspace"]["targets"]
-            puts targets ? targets.first : nil
+            begin
+              data = JSON.parse(STDIN.gets)
+              # 同时兼容workspace的schemes和project的targets/schemes
+              schemes = data["workspace"] && data["workspace"]["schemes"] || 
+                        data["project"] && (data["project"]["schemes"] || data["project"]["targets"])
+              puts schemes ? schemes.first : nil
+            rescue JSON::ParserError => e
+              puts "JSON解析错误: #{e.message}"
+              exit 1
+            end
           ')
           
           if [ -z "$default_scheme" ]; then
-            echo "Error: No default scheme found in targets"
+            echo "Error: 未找到可用的scheme"
             exit 1
           fi
           
           echo "DEFAULT_SCHEME=$default_scheme" >> $GITHUB_ENV
-          echo "Using default scheme: $default_scheme"
+          echo "使用默认scheme: $default_scheme"
 
       - name: Build
         run: |
