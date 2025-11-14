@@ -15,26 +15,50 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set Default Scheme
+      - name: Locate Xcode project/workspace
         run: |
-          scheme_list=$(xcodebuild -list -json | tr -d "\n")
-          default=$(echo $scheme_list | ruby -e "require 'json'; puts JSON.parse(STDIN.gets)['project']['targets'][0]")
-          echo $default | cat >default
-          echo Using default scheme: $default
+          # 查找所有 .xcodeproj 和 .xcworkspace 文件（包括子目录）
+          proj_files=$(find . -maxdepth 3 -type d -name "*.xcodeproj" | head -n 1)
+          workspace_files=$(find . -maxdepth 3 -type d -name "*.xcworkspace" | head -n 1)
+          
+          # 优先使用工作区，如果没有则使用项目
+          if [ -n "$workspace_files" ]; then
+            echo "FILETYPE_PARAMETER=workspace" >> $GITHUB_ENV
+            echo "FILE_TO_BUILD=$workspace_files" >> $GITHUB_ENV
+            echo "Found workspace: $workspace_files"
+          elif [ -n "$proj_files" ]; then
+            echo "FILETYPE_PARAMETER=project" >> $GITHUB_ENV
+            echo "FILE_TO_BUILD=$proj_files" >> $GITHUB_ENV
+            echo "Found project: $proj_files"
+          else
+            echo "Error: No Xcode project or workspace found"
+            exit 1
+          fi
+
+      - name: Get default scheme from project/workspace
+        run: |
+          # 从找到的项目/工作区中获取 scheme 列表
+          scheme_list=$(xcodebuild -list -json -${{ env.FILETYPE_PARAMETER }} "${{ env.FILE_TO_BUILD }}" | tr -d "\n")
+          default_scheme=$(echo "$scheme_list" | ruby -e "require 'json'; puts JSON.parse(STDIN.gets)['project']['targets'][0]")
+          
+          if [ -z "$default_scheme" ]; then
+            echo "Error: No default scheme found"
+            exit 1
+          fi
+          
+          echo "DEFAULT_SCHEME=$default_scheme" >> $GITHUB_ENV
+          echo "Using default scheme: $default_scheme"
 
       - name: Build
-        env:
-          scheme: ${{ 'default' }}
         run: |
-          if [ $scheme = default ]; then scheme=$(cat default); fi
-          if [ "`ls -A | grep -i \\.xcworkspace\$`" ]; then filetype_parameter="workspace" && file_to_build="`ls -A | grep -i \\.xcworkspace\$`"; else filetype_parameter="project" && file_to_build="`ls -A | grep -i \\.xcodeproj\$`"; fi
-          file_to_build=`echo $file_to_build | awk '{$1=$1;print}'`
-          xcodebuild clean build analyze -scheme "$scheme" -"$filetype_parameter" "$file_to_build" | xcpretty && exit ${PIPESTATUS[0]}
+          xcodebuild clean build analyze \
+            -scheme "${{ env.DEFAULT_SCHEME }}" \
+            -${{ env.FILETYPE_PARAMETER }} "${{ env.FILE_TO_BUILD }}" \
+            | xcpretty && exit ${PIPESTATUS[0]}
 
-      # 新增：构建失败时上传日志（使用 v4 版本避免 deprecated 错误）
       - name: Upload build logs on failure
         if: failure()
-        uses: actions/upload-artifact@v4  # 已升级到 v4 版本
+        uses: actions/upload-artifact@v4
         with:
           name: build-logs
           path: ~/Library/Logs/Xcode/
